@@ -1,0 +1,144 @@
+.empty {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.resetLink {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.resetLink:hover { color: var(--text-primary); }
+
+.topCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: var(--bg-subtle);
+  margin-bottom: 1.25rem;
+}
+
+.topLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.topName {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.topReason {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.tag.have {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.tag.missing {
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 1rem;
+}
+
+.cookBtn {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 16px;
+  background: var(--text-primary);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.12s;
+}
+
+.cookBtn:hover { opacity: 0.8; }
+
+.skipBtn {
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: background 0.12s;
+}
+
+.skipBtn:hover { background: var(--bg-muted); }
+
+.othersLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.otherCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 8px;
+  background: var(--bg-subtle);
+}
+
+.otherHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.otherName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pct {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pct.full { color: var(--green-text); }
+.pct.partial { color: var(--amber-text); }
+.pct.low { color: var(--red-text); }
