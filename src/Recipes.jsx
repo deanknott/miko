@@ -3,22 +3,34 @@ import MatchBar, { matchClass } from './MatchBar.jsx'
 import styles from './Recipes.module.css'
 
 function RecipeCard({ recipe, match, onDelete }) {
-  const cls = matchClass(match.pct)
+  const cls = match.unmakable ? 'unmakable' : matchClass(match.pct)
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} ${match.unmakable ? styles.cardUnmakable : ''}`}>
       <div className={styles.cardHeader}>
         <span className={styles.cardName}>{recipe.name}</span>
         <div className={styles.cardRight}>
-          <span className={`${styles.pct} ${styles[cls]}`}>{match.pct}% match</span>
+          {match.unmakable
+            ? <span className={styles.unmakableLabel}>unmakable</span>
+            : <span className={`${styles.pct} ${styles[cls]}`}>{match.pct}% match</span>
+          }
           <button onClick={() => onDelete(recipe.id)} className={styles.deleteBtn} aria-label={`Delete ${recipe.name}`}>
             ✕
           </button>
         </div>
       </div>
-      <MatchBar pct={match.pct} />
+      {!match.unmakable && <MatchBar pct={match.pct} />}
       <div className={styles.tags}>
-        {match.have.map(i => <span key={i} className={`${styles.tag} ${styles.have}`}>{i}</span>)}
-        {match.missing.map(i => <span key={i} className={`${styles.tag} ${styles.missing}`}>{i}</span>)}
+        {recipe.ings.map(ing => {
+          const inStock = match.have.includes(ing.name)
+          return (
+            <span
+              key={ing.name}
+              className={`${styles.tag} ${inStock ? styles.have : styles.missing} ${ing.essential ? styles.essential : ''}`}
+            >
+              {ing.essential ? '★ ' : ''}{ing.name}
+            </span>
+          )
+        })}
       </div>
     </div>
   )
@@ -31,13 +43,17 @@ function AddRecipeForm({ onSave, onCancel }) {
 
   function addIng() {
     const val = ingInput.trim().toLowerCase()
-    if (!val || ings.includes(val)) return
-    setIngs(prev => [...prev, val])
+    if (!val || ings.some(i => i.name === val)) return
+    setIngs(prev => [...prev, { name: val, essential: false }])
     setIngInput('')
   }
 
-  function removeIng(ing) {
-    setIngs(prev => prev.filter(i => i !== ing))
+  function removeIng(name) {
+    setIngs(prev => prev.filter(i => i.name !== name))
+  }
+
+  function toggleEssential(name) {
+    setIngs(prev => prev.map(i => i.name === name ? { ...i, essential: !i.essential } : i))
   }
 
   function handleSave() {
@@ -67,14 +83,25 @@ function AddRecipeForm({ onSave, onCancel }) {
         <button onClick={addIng} className={styles.addBtn}>Add</button>
       </div>
       {ings.length > 0 && (
-        <div className={styles.chipGrid}>
-          {ings.map(ing => (
-            <div key={ing} className={styles.chip}>
-              <span>{ing}</span>
-              <button onClick={() => removeIng(ing)} className={styles.chipRemove} aria-label={`Remove ${ing}`}>×</button>
-            </div>
-          ))}
-        </div>
+        <>
+          <p className={styles.essentialHint}>Tap ★ to mark an ingredient as essential</p>
+          <div className={styles.chipGrid}>
+            {ings.map(ing => (
+              <div key={ing.name} className={`${styles.chip} ${ing.essential ? styles.chipEssential : ''}`}>
+                <button
+                  onClick={() => toggleEssential(ing.name)}
+                  className={styles.essentialBtn}
+                  aria-label={`Mark ${ing.name} as ${ing.essential ? 'optional' : 'essential'}`}
+                  title={ing.essential ? 'Essential — click to make optional' : 'Optional — click to make essential'}
+                >
+                  ★
+                </button>
+                <span>{ing.name}</span>
+                <button onClick={() => removeIng(ing.name)} className={styles.chipRemove} aria-label={`Remove ${ing.name}`}>×</button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
       <div className={styles.formActions}>
         <button onClick={handleSave} className={styles.saveBtn} disabled={!name.trim() || ings.length === 0}>
@@ -94,6 +121,9 @@ export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe }) 
     setShowForm(false)
   }
 
+  const makable = recipes.filter(r => !getMatch(r).unmakable)
+  const unmakable = recipes.filter(r => getMatch(r).unmakable)
+
   return (
     <div>
       {!showForm && (
@@ -110,9 +140,18 @@ export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe }) 
         <p className={styles.empty}>No recipes yet. Add your first one above.</p>
       )}
 
-      {recipes.map(r => (
+      {makable.map(r => (
         <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} />
       ))}
+
+      {unmakable.length > 0 && (
+        <>
+          <p className={styles.sectionLabel}>Unmakable</p>
+          {unmakable.map(r => (
+            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} />
+          ))}
+        </>
+      )}
     </div>
   )
 }

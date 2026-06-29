@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styles from './Ingredients.module.css'
 
-export default function Ingredients({ ingredients, addIngredient, removeIngredient }) {
+export default function Ingredients({ ingredients, addIngredient, removeIngredient, toggleIngredient }) {
   const [input, setInput] = useState('')
 
   function handleAdd() {
@@ -11,6 +11,8 @@ export default function Ingredients({ ingredients, addIngredient, removeIngredie
   function handleKey(e) {
     if (e.key === 'Enter') handleAdd()
   }
+
+  const checkedCount = ingredients.filter(i => i.checked).length
 
   return (
     <div className={styles.wrap}>
@@ -27,26 +29,34 @@ export default function Ingredients({ ingredients, addIngredient, removeIngredie
       </div>
 
       <p className={styles.count}>
-        {ingredients.length} ingredient{ingredients.length !== 1 ? 's' : ''}
+        {checkedCount} of {ingredients.length} in stock
       </p>
 
       {ingredients.length === 0 ? (
         <p className={styles.empty}>No ingredients yet. Add what's in your kitchen.</p>
       ) : (
-        <div className={styles.chipGrid}>
+        <ul className={styles.list}>
           {ingredients.map(ing => (
-            <div key={ing} className={styles.chip}>
-              <span>{ing}</span>
+            <li key={ing.name} className={`${styles.row} ${!ing.checked ? styles.rowUnchecked : ''}`}>
+              <label className={styles.label}>
+                <input
+                  type="checkbox"
+                  checked={ing.checked}
+                  onChange={() => toggleIngredient(ing.name)}
+                  className={styles.checkbox}
+                />
+                <span className={styles.ingName}>{ing.name}</span>
+              </label>
               <button
-                onClick={() => removeIngredient(ing)}
-                className={styles.chipRemove}
-                aria-label={`Remove ${ing}`}
+                onClick={() => removeIngredient(ing.name)}
+                className={styles.deleteBtn}
+                aria-label={`Remove ${ing.name}`}
               >
                 ×
               </button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   )

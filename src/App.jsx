@@ -42,6 +42,7 @@ export default function App() {
             ingredients={store.ingredients}
             addIngredient={store.addIngredient}
             removeIngredient={store.removeIngredient}
+            toggleIngredient={store.toggleIngredient}
           />
         )}
         {activeTab === 'recipes' && (

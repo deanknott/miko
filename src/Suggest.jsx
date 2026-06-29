@@ -22,8 +22,8 @@ export default function Suggest({ getSortedRecipes, recipes }) {
   if (sorted.length === 0) {
     return (
       <p className={styles.empty}>
-        You've seen all the options.{' '}
-        <button onClick={reset} className={styles.resetLink}>Start over</button>
+        No makable recipes right now — check your ingredients or{' '}
+        <button onClick={reset} className={styles.resetLink}>start over</button>.
       </p>
     )
   }
@@ -44,8 +44,17 @@ export default function Suggest({ getSortedRecipes, recipes }) {
         </div>
         <MatchBar pct={top.pct} />
         <div className={styles.tags}>
-          {top.have.map(i => <span key={i} className={`${styles.tag} ${styles.have}`}>{i}</span>)}
-          {top.missing.map(i => <span key={i} className={`${styles.tag} ${styles.missing}`}>{i}</span>)}
+          {top.ings.map(ing => {
+            const inStock = top.have.includes(ing.name)
+            return (
+              <span
+                key={ing.name}
+                className={`${styles.tag} ${inStock ? styles.have : styles.missing} ${ing.essential ? styles.essential : ''}`}
+              >
+                {ing.essential ? '★ ' : ''}{ing.name}
+              </span>
+            )
+          })}
         </div>
         <div className={styles.actions}>
           <a

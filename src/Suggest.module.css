@@ -142,3 +142,7 @@
 .pct.full { color: var(--green-text); }
 .pct.partial { color: var(--amber-text); }
 .pct.low { color: var(--red-text); }
+
+.tag.essential {
+  font-weight: 500;
+}

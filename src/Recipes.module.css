@@ -14,12 +14,25 @@
 
 .empty { font-size: 14px; color: var(--text-muted); }
 
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 1.25rem 0 10px;
+}
+
 .card {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   margin-bottom: 10px;
   background: var(--bg-subtle);
+}
+
+.cardUnmakable {
+  opacity: 0.5;
 }
 
 .cardHeader {
@@ -48,6 +61,12 @@
 .pct.full { color: var(--green-text); }
 .pct.partial { color: var(--amber-text); }
 .pct.low { color: var(--red-text); }
+
+.unmakableLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
 
 .deleteBtn {
   background: none;
@@ -84,6 +103,10 @@
   border: 1px solid var(--border);
 }
 
+.tag.essential {
+  font-weight: 500;
+}
+
 .addForm {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -97,6 +120,12 @@
   font-weight: 500;
   margin-bottom: 12px;
   color: var(--text-primary);
+}
+
+.essentialHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
 
 .addRow {
@@ -147,13 +176,36 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px 5px 12px;
+  padding: 5px 10px 5px 8px;
   border: 1px solid var(--border);
   border-radius: 99px;
   font-size: 13px;
   background: var(--bg);
   color: var(--text-primary);
 }
+
+.chipEssential {
+  border-color: var(--amber-text);
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+
+.essentialBtn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  line-height: 1;
+  transition: color 0.12s;
+}
+
+.chipEssential .essentialBtn {
+  color: var(--amber-text);
+}
+
+.essentialBtn:hover { color: var(--text-primary); }
 
 .chipRemove {
   background: none;
