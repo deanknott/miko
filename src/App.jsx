@@ -51,6 +51,7 @@ export default function App() {
             getMatch={store.getMatch}
             addRecipe={store.addRecipe}
             removeRecipe={store.removeRecipe}
+            updateRecipeIngs={store.updateRecipeIngs}
           />
         )}
         {activeTab === 'suggest' && (

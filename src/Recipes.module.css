@@ -256,3 +256,21 @@
 }
 
 .cancelBtn:hover { background: var(--bg-muted); }
+
+.editBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.editBtn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.editBtnActive { border-color: var(--border-strong); color: var(--text-primary); }
+
+.chipMissing {
+  opacity: 0.5;
+}

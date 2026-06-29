@@ -2,8 +2,15 @@ import { useState } from 'react'
 import MatchBar, { matchClass } from './MatchBar.jsx'
 import styles from './Recipes.module.css'
 
-function RecipeCard({ recipe, match, onDelete }) {
+function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
+  const [editing, setEditing] = useState(false)
   const cls = match.unmakable ? 'unmakable' : matchClass(match.pct)
+
+  function toggleEssential(name) {
+    const updated = recipe.ings.map(i => i.name === name ? { ...i, essential: !i.essential } : i)
+    onUpdateIngs(recipe.id, updated)
+  }
+
   return (
     <div className={`${styles.card} ${match.unmakable ? styles.cardUnmakable : ''}`}>
       <div className={styles.cardHeader}>
@@ -13,25 +20,58 @@ function RecipeCard({ recipe, match, onDelete }) {
             ? <span className={styles.unmakableLabel}>unmakable</span>
             : <span className={`${styles.pct} ${styles[cls]}`}>{match.pct}% match</span>
           }
+          <button
+            onClick={() => setEditing(e => !e)}
+            className={`${styles.editBtn} ${editing ? styles.editBtnActive : ''}`}
+            aria-label="Edit essential ingredients"
+          >
+            edit
+          </button>
           <button onClick={() => onDelete(recipe.id)} className={styles.deleteBtn} aria-label={`Delete ${recipe.name}`}>
             ✕
           </button>
         </div>
       </div>
+
       {!match.unmakable && <MatchBar pct={match.pct} />}
-      <div className={styles.tags}>
-        {recipe.ings.map(ing => {
-          const inStock = match.have.includes(ing.name)
-          return (
-            <span
-              key={ing.name}
-              className={`${styles.tag} ${inStock ? styles.have : styles.missing} ${ing.essential ? styles.essential : ''}`}
-            >
-              {ing.essential ? '★ ' : ''}{ing.name}
-            </span>
-          )
-        })}
-      </div>
+
+      {editing ? (
+        <>
+          <p className={styles.essentialHint}>Tap ★ to toggle essential</p>
+          <div className={styles.chipGrid} style={{ marginTop: '10px' }}>
+            {recipe.ings.map(ing => {
+              const inStock = match.have.includes(ing.name)
+              return (
+                <div key={ing.name} className={`${styles.chip} ${ing.essential ? styles.chipEssential : ''} ${!inStock ? styles.chipMissing : ''}`}>
+                  <button
+                    onClick={() => toggleEssential(ing.name)}
+                    className={styles.essentialBtn}
+                    aria-label={`Mark ${ing.name} as ${ing.essential ? 'optional' : 'essential'}`}
+                    title={ing.essential ? 'Essential — click to make optional' : 'Optional — click to make essential'}
+                  >
+                    ★
+                  </button>
+                  <span>{ing.name}</span>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      ) : (
+        <div className={styles.tags}>
+          {recipe.ings.map(ing => {
+            const inStock = match.have.includes(ing.name)
+            return (
+              <span
+                key={ing.name}
+                className={`${styles.tag} ${inStock ? styles.have : styles.missing} ${ing.essential ? styles.essential : ''}`}
+              >
+                {ing.essential ? '★ ' : ''}{ing.name}
+              </span>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -92,7 +132,6 @@ function AddRecipeForm({ onSave, onCancel }) {
                   onClick={() => toggleEssential(ing.name)}
                   className={styles.essentialBtn}
                   aria-label={`Mark ${ing.name} as ${ing.essential ? 'optional' : 'essential'}`}
-                  title={ing.essential ? 'Essential — click to make optional' : 'Optional — click to make essential'}
                 >
                   ★
                 </button>
@@ -113,7 +152,7 @@ function AddRecipeForm({ onSave, onCancel }) {
   )
 }
 
-export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe }) {
+export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe, updateRecipeIngs }) {
   const [showForm, setShowForm] = useState(false)
 
   function handleSave(name, ings) {
@@ -141,14 +180,14 @@ export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe }) 
       )}
 
       {makable.map(r => (
-        <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} />
+        <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
       ))}
 
       {unmakable.length > 0 && (
         <>
           <p className={styles.sectionLabel}>Unmakable</p>
           {unmakable.map(r => (
-            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} />
+            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
           ))}
         </>
       )}
