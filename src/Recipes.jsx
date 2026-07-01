@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import MatchBar, { matchClass } from './MatchBar.jsx'
 import styles from './Recipes.module.css'
 
@@ -79,17 +79,15 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
 function AddRecipeForm({ ingredients, onSave, onCancel }) {
   const [name, setName] = useState('')
   const [ingInput, setIngInput] = useState('')
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [ings, setIngs] = useState([])
-  const ingInputRef = useRef(null)
 
-  function addIng() {
-    // Chrome doesn't fire an input/change event when a datalist suggestion is
-    // clicked, so React's ingInput state can be stale — read the DOM value directly.
-    const raw = ingInputRef.current ? ingInputRef.current.value : ingInput
-    const val = raw.trim().toLowerCase()
+  function addIng(rawValue) {
+    const val = (rawValue ?? ingInput).trim().toLowerCase()
     if (!val || ings.some(i => i.name === val)) return
     setIngs(prev => [...prev, { name: val, essential: false }])
     setIngInput('')
+    setSuggestionsOpen(false)
   }
 
   function removeIng(name) {
@@ -115,22 +113,43 @@ function AddRecipeForm({ ingredients, onSave, onCancel }) {
         placeholder="Recipe name (e.g. pasta carbonara)"
         className={styles.input}
       />
-      <div className={styles.addRow}>
-        <input
-          ref={ingInputRef}
-          type="text"
-          value={ingInput}
-          onChange={e => setIngInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addIng()}
-          placeholder="Add an ingredient"
-          className={styles.input}
-          list="pantry-ingredients"
-        />
-        <button onClick={addIng} className={styles.addBtn}>Add</button>
+      <div className={styles.autocompleteWrap}>
+        <div className={styles.addRow}>
+          <input
+            type="text"
+            value={ingInput}
+            onChange={e => { setIngInput(e.target.value); setSuggestionsOpen(true) }}
+            onFocus={() => setSuggestionsOpen(true)}
+            onBlur={() => setSuggestionsOpen(false)}
+            onKeyDown={e => e.key === 'Enter' && addIng()}
+            placeholder="Add an ingredient"
+            className={styles.input}
+          />
+          <button onClick={() => addIng()} className={styles.addBtn}>Add</button>
+        </div>
+        {suggestionsOpen && (() => {
+          const query = ingInput.trim().toLowerCase()
+          const suggestions = ingredients
+            .filter(ing => !ings.some(added => added.name === ing.name))
+            .filter(ing => ing.name.includes(query))
+          if (suggestions.length === 0) return null
+          return (
+            <ul className={styles.suggestionList}>
+              {suggestions.map(ing => (
+                <li key={ing.name}>
+                  <button
+                    type="button"
+                    onMouseDown={e => { e.preventDefault(); addIng(ing.name) }}
+                    className={styles.suggestionItem}
+                  >
+                    {ing.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )
+        })()}
       </div>
-      <datalist id="pantry-ingredients">
-        {ingredients.map(ing => <option key={ing.name} value={ing.name} />)}
-      </datalist>
       {ings.length > 0 && (
         <>
           <p className={styles.essentialHint}>Tap ★ to mark an ingredient as essential</p>
