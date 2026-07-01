@@ -128,7 +128,7 @@
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .row:last-child { border-bottom: none; }
