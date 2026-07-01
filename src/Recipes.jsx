@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import MatchBar, { matchClass } from './MatchBar.jsx'
 import styles from './Recipes.module.css'
 
@@ -80,9 +80,13 @@ function AddRecipeForm({ ingredients, onSave, onCancel }) {
   const [name, setName] = useState('')
   const [ingInput, setIngInput] = useState('')
   const [ings, setIngs] = useState([])
+  const ingInputRef = useRef(null)
 
   function addIng() {
-    const val = ingInput.trim().toLowerCase()
+    // Chrome doesn't fire an input/change event when a datalist suggestion is
+    // clicked, so React's ingInput state can be stale — read the DOM value directly.
+    const raw = ingInputRef.current ? ingInputRef.current.value : ingInput
+    const val = raw.trim().toLowerCase()
     if (!val || ings.some(i => i.name === val)) return
     setIngs(prev => [...prev, { name: val, essential: false }])
     setIngInput('')
@@ -113,6 +117,7 @@ function AddRecipeForm({ ingredients, onSave, onCancel }) {
       />
       <div className={styles.addRow}>
         <input
+          ref={ingInputRef}
           type="text"
           value={ingInput}
           onChange={e => setIngInput(e.target.value)}
