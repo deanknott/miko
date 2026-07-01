@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { DndContext, closestCenter, useDraggable, useDroppable } from '@dnd-kit/core'
 import styles from './Ingredients.module.css'
 
+function byName(a, b) {
+  return a.name.localeCompare(b.name)
+}
+
 function IngredientRow({ ing, toggleIngredient, removeIngredient }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: `ing:${ing.name}` })
@@ -167,7 +171,7 @@ export default function Ingredients({
             <CategorySection
               key={category.id}
               category={category}
-              ingredients={ingredients.filter(i => i.categoryId === category.id)}
+              ingredients={ingredients.filter(i => i.categoryId === category.id).sort(byName)}
               toggleIngredient={toggleIngredient}
               removeIngredient={removeIngredient}
               onRename={renameCategory}
@@ -176,7 +180,7 @@ export default function Ingredients({
           ))}
           <CategorySection
             category={null}
-            ingredients={ingredients.filter(i => i.categoryId == null)}
+            ingredients={ingredients.filter(i => i.categoryId == null).sort(byName)}
             toggleIngredient={toggleIngredient}
             removeIngredient={removeIngredient}
           />
