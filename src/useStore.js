@@ -9,14 +9,20 @@ export function useStore() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    // StrictMode double-invokes this effect in dev, firing two independent
+    // /api/state requests — without this guard, whichever response arrives
+    // last (not necessarily the real, surviving mount's) overwrites state.
+    let ignore = false
     api('/api/state')
       .then(data => {
+        if (ignore) return
         setIngredients(data.ingredients)
         setCategories(data.categories)
         setRecipes(data.recipes)
       })
-      .catch(() => setError('Failed to load data from the server.'))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!ignore) setError('Failed to load data from the server.') })
+      .finally(() => { if (!ignore) setLoading(false) })
+    return () => { ignore = true }
   }, [])
 
   async function addIngredient(name) {
@@ -114,6 +120,9 @@ export function useStore() {
     try {
       const created = await api('/api/recipes', { method: 'POST', body: JSON.stringify({ name: name.trim(), ings }) })
       setRecipes(prev => [...prev, created])
+      if (created.newIngredients?.length > 0) {
+        setIngredients(prev => [...prev, ...created.newIngredients])
+      }
       return created
     } catch {
       setError('Failed to add recipe.')
@@ -136,7 +145,10 @@ export function useStore() {
     const prev = recipes
     setRecipes(list => list.map(r => r.id === id ? { ...r, ings } : r))
     try {
-      await api('/api/recipes', { method: 'PATCH', body: JSON.stringify({ id, ings }) })
+      const result = await api('/api/recipes', { method: 'PATCH', body: JSON.stringify({ id, ings }) })
+      if (result.newIngredients?.length > 0) {
+        setIngredients(list => [...list, ...result.newIngredients])
+      }
     } catch {
       setRecipes(prev)
       setError('Failed to update recipe.')

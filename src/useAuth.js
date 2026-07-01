@@ -7,10 +7,14 @@ export function useAuth() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    // See useStore.js — guards against StrictMode's double-invoked mount effect
+    // racing two /api/auth/me requests and applying whichever resolves last.
+    let ignore = false
     api('/api/auth/me')
-      .then(data => setUser(data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false))
+      .then(data => { if (!ignore) setUser(data.user) })
+      .catch(() => { if (!ignore) setUser(null) })
+      .finally(() => { if (!ignore) setLoading(false) })
+    return () => { ignore = true }
   }, [])
 
   async function signup(email, password) {
