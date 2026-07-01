@@ -76,7 +76,7 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
   )
 }
 
-function AddRecipeForm({ onSave, onCancel }) {
+function AddRecipeForm({ ingredients, onSave, onCancel }) {
   const [name, setName] = useState('')
   const [ingInput, setIngInput] = useState('')
   const [ings, setIngs] = useState([])
@@ -119,9 +119,13 @@ function AddRecipeForm({ onSave, onCancel }) {
           onKeyDown={e => e.key === 'Enter' && addIng()}
           placeholder="Add an ingredient"
           className={styles.input}
+          list="pantry-ingredients"
         />
         <button onClick={addIng} className={styles.addBtn}>Add</button>
       </div>
+      <datalist id="pantry-ingredients">
+        {ingredients.map(ing => <option key={ing.name} value={ing.name} />)}
+      </datalist>
       {ings.length > 0 && (
         <>
           <p className={styles.essentialHint}>Tap ★ to mark an ingredient as essential</p>
@@ -152,7 +156,7 @@ function AddRecipeForm({ onSave, onCancel }) {
   )
 }
 
-export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe, updateRecipeIngs }) {
+export default function Recipes({ recipes, ingredients, getMatch, addRecipe, removeRecipe, updateRecipeIngs }) {
   const [showForm, setShowForm] = useState(false)
 
   function handleSave(name, ings) {
@@ -172,7 +176,7 @@ export default function Recipes({ recipes, getMatch, addRecipe, removeRecipe, up
       )}
 
       {showForm && (
-        <AddRecipeForm onSave={handleSave} onCancel={() => setShowForm(false)} />
+        <AddRecipeForm ingredients={ingredients} onSave={handleSave} onCancel={() => setShowForm(false)} />
       )}
 
       {recipes.length === 0 && !showForm && (

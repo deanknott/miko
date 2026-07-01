@@ -68,6 +68,7 @@ export default function MainApp({ user, onLogout }) {
         {activeTab === 'recipes' && (
           <Recipes
             recipes={store.recipes}
+            ingredients={store.ingredients}
             getMatch={store.getMatch}
             addRecipe={store.addRecipe}
             removeRecipe={store.removeRecipe}
