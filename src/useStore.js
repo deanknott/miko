@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { loadIngredients, saveIngredients, loadRecipes, saveRecipes } from './storage.js'
 
 const DEFAULT_INGREDIENTS = [
   'eggs', 'butter', 'onion', 'garlic', 'pasta', 'pepper', 'mushroom',
@@ -31,9 +32,15 @@ const DEFAULT_RECIPES = [
 ]
 
 export function useStore() {
-  const [ingredients, setIngredients] = useState(DEFAULT_INGREDIENTS)
-  const [recipes, setRecipes] = useState(DEFAULT_RECIPES)
-  const [nextId, setNextId] = useState(17)
+  const [ingredients, setIngredients] = useState(() => loadIngredients(DEFAULT_INGREDIENTS))
+  const [recipes, setRecipes] = useState(() => loadRecipes(DEFAULT_RECIPES))
+  const [nextId, setNextId] = useState(() => {
+    const ids = recipes.map(r => r.id)
+    return ids.length ? Math.max(...ids) + 1 : 1
+  })
+
+  useEffect(() => saveIngredients(ingredients), [ingredients])
+  useEffect(() => saveRecipes(recipes), [recipes])
 
   function addIngredient(name) {
     const val = name.trim().toLowerCase()
