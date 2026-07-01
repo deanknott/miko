@@ -36,7 +36,18 @@ export default function App() {
         ))}
       </nav>
 
+      {store.error && (
+        <div className={styles.errorBanner}>
+          {store.error}
+          <button onClick={store.clearError} className={styles.errorDismiss} aria-label="Dismiss error">×</button>
+        </div>
+      )}
+
       <main className={styles.content} role="tabpanel">
+        {store.loading ? (
+          <p className={styles.loading}>Loading…</p>
+        ) : (
+        <>
         {activeTab === 'ingredients' && (
           <Ingredients
             ingredients={store.ingredients}
@@ -64,6 +75,8 @@ export default function App() {
             getSortedRecipes={store.getSortedRecipes}
             recipes={store.recipes}
           />
+        )}
+        </>
         )}
       </main>
     </div>

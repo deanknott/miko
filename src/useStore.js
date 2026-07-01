@@ -1,117 +1,154 @@
 import { useState, useEffect } from 'react'
-import {
-  loadIngredients, saveIngredients,
-  loadRecipes, saveRecipes,
-  loadCategories, saveCategories,
-} from './storage.js'
 
-const DEFAULT_INGREDIENTS = [
-  'eggs', 'butter', 'onion', 'garlic', 'pasta', 'pepper', 'mushroom',
-  'cheese', 'halloumi', 'paneer', 'taco shells', 'mince',
-  'waffles', 'beans', 'cous cous', 'curry sauce', 'chip shop curry sauce',
-  'lasagna sheets', 'lasagna red sauce', 'lasagna white sauce', 'honey', 'parsnips',
-  'carrots', 'seitan', 'bang bang', 'corn flour', 'crumbs', 'soy sauce', 'hoisin', 'xiou xing',
-  'brown sugar', 'five spice', 'ginger', 'rice', 'wraps', 'fajita seasoning', 'cream cheese',
-  'hot chilli sauce', 'mac and cheese', 'feta', 'pasta bake sauce', 'roasties', 'gravy',
-  'enchilada kit',
-].map(name => ({ name, checked: true, categoryId: null }))
-
-const DEFAULT_CATEGORIES = []
-
-const DEFAULT_RECIPES = [
-  { id: 1,  name: 'Halloumi curry',      ings: [{ name: 'rice', essential: true }, { name: 'curry sauce', essential: true }, { name: 'halloumi', essential: false }, { name: 'onion', essential: false }, { name: 'pepper', essential: false }, { name: 'mushroom', essential: false }] },
-  { id: 2,  name: 'Paneer curry',        ings: [{ name: 'rice', essential: true }, { name: 'curry sauce', essential: true }, { name: 'paneer', essential: false }, { name: 'onion', essential: false }, { name: 'pepper', essential: false }, { name: 'mushroom', essential: false }] },
-  { id: 3,  name: 'Tacos',              ings: [{ name: 'taco shells', essential: true }, { name: 'mince', essential: true }, { name: 'hot chilli sauce', essential: false }, { name: 'mac and cheese', essential: false }, { name: 'onion', essential: false }, { name: 'pepper', essential: false }, { name: 'mushroom', essential: false }] },
-  { id: 4,  name: 'Breakfast tea',      ings: [{ name: 'waffles', essential: true }, { name: 'eggs', essential: true }, { name: 'beans', essential: false }, { name: 'cheese', essential: false }] },
-  { id: 5,  name: 'Halloumi cous cous', ings: [{ name: 'cous cous', essential: true }, { name: 'halloumi', essential: true }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-  { id: 6,  name: 'Feta cous cous',     ings: [{ name: 'cous cous', essential: true }, { name: 'feta', essential: true }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-  { id: 7,  name: 'Pasta bake',         ings: [{ name: 'pasta', essential: true }, { name: 'pasta bake sauce', essential: true }, { name: 'cheese', essential: false }] },
-  { id: 8,  name: 'Lasagna',            ings: [{ name: 'mince', essential: true }, { name: 'lasagna sheets', essential: true }, { name: 'lasagna red sauce', essential: true }, { name: 'lasagna white sauce', essential: true }, { name: 'cheese', essential: false }] },
-  { id: 9,  name: 'Honey roast',        ings: [{ name: 'carrots', essential: true }, { name: 'parsnips', essential: true }, { name: 'honey', essential: true }, { name: 'roasties', essential: true }, { name: 'gravy', essential: true }, { name: 'onion', essential: false }, { name: 'pepper', essential: false }, { name: 'halloumi', essential: false }, { name: 'garlic', essential: false }] },
-  { id: 10, name: 'Bang bang',          ings: [{ name: 'bang bang', essential: true }, { name: 'seitan', essential: true }, { name: 'rice', essential: true }, { name: 'corn flour', essential: false }, { name: 'crumbs', essential: false }] },
-  { id: 11, name: 'BBQ sauce',          ings: [{ name: 'hoisin', essential: true }, { name: 'soy sauce', essential: true }, { name: 'xiou xing', essential: true }, { name: 'ginger', essential: false }, { name: 'honey', essential: false }, { name: 'brown sugar', essential: false }, { name: 'five spice', essential: false }, { name: 'garlic', essential: false }] },
-  { id: 12, name: 'Halloumi fried rice',ings: [{ name: 'rice', essential: true }, { name: 'eggs', essential: true }, { name: 'chip shop curry sauce', essential: true }, { name: 'halloumi', essential: false }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-  { id: 13, name: 'Seitan fried rice',  ings: [{ name: 'rice', essential: true }, { name: 'eggs', essential: true }, { name: 'chip shop curry sauce', essential: true }, { name: 'seitan', essential: false }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-  { id: 14, name: 'Enchiladas',         ings: [{ name: 'enchilada kit', essential: true }, { name: 'halloumi', essential: true }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-  { id: 15, name: 'Seitan fajitas',     ings: [{ name: 'wraps', essential: true }, { name: 'seitan', essential: true }, { name: 'fajita seasoning', essential: true }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-  { id: 16, name: 'Halloumi fajitas',   ings: [{ name: 'wraps', essential: true }, { name: 'halloumi', essential: true }, { name: 'fajita seasoning', essential: true }, { name: 'mushroom', essential: false }, { name: 'pepper', essential: false }, { name: 'onion', essential: false }] },
-]
+async function api(path, options) {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  })
+  if (!res.ok) throw new Error(`${path} failed: ${res.status}`)
+  return res.status === 204 ? null : res.json()
+}
 
 export function useStore() {
-  const [ingredients, setIngredients] = useState(() => loadIngredients(DEFAULT_INGREDIENTS))
-  const [recipes, setRecipes] = useState(() => loadRecipes(DEFAULT_RECIPES))
-  const [categories, setCategories] = useState(() => loadCategories(DEFAULT_CATEGORIES))
-  const [nextId, setNextId] = useState(() => {
-    const ids = recipes.map(r => r.id)
-    return ids.length ? Math.max(...ids) + 1 : 1
-  })
-  const [nextCategoryId, setNextCategoryId] = useState(() => {
-    const ids = categories.map(c => c.id)
-    return ids.length ? Math.max(...ids) + 1 : 1
-  })
+  const [ingredients, setIngredients] = useState([])
+  const [recipes, setRecipes] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  useEffect(() => saveIngredients(ingredients), [ingredients])
-  useEffect(() => saveRecipes(recipes), [recipes])
-  useEffect(() => saveCategories(categories), [categories])
+  useEffect(() => {
+    api('/api/state')
+      .then(data => {
+        setIngredients(data.ingredients)
+        setCategories(data.categories)
+        setRecipes(data.recipes)
+      })
+      .catch(() => setError('Failed to load data from the server.'))
+      .finally(() => setLoading(false))
+  }, [])
 
-  function addIngredient(name) {
+  async function addIngredient(name) {
     const val = name.trim().toLowerCase()
     if (!val || ingredients.some(i => i.name === val)) return false
     setIngredients(prev => [...prev, { name: val, checked: true, categoryId: null }])
-    return true
+    try {
+      await api('/api/ingredients', { method: 'POST', body: JSON.stringify({ name: val }) })
+      return true
+    } catch {
+      setIngredients(prev => prev.filter(i => i.name !== val))
+      setError('Failed to add ingredient.')
+      return false
+    }
   }
 
-  function removeIngredient(name) {
-    setIngredients(prev => prev.filter(i => i.name !== name))
+  async function removeIngredient(name) {
+    const prev = ingredients
+    setIngredients(list => list.filter(i => i.name !== name))
+    try {
+      await api(`/api/ingredients?name=${encodeURIComponent(name)}`, { method: 'DELETE' })
+    } catch {
+      setIngredients(prev)
+      setError('Failed to remove ingredient.')
+    }
   }
 
-  function toggleIngredient(name) {
-    setIngredients(prev =>
-      prev.map(i => i.name === name ? { ...i, checked: !i.checked } : i)
-    )
+  async function toggleIngredient(name) {
+    const target = ingredients.find(i => i.name === name)
+    if (!target) return
+    const nextChecked = !target.checked
+    setIngredients(prev => prev.map(i => i.name === name ? { ...i, checked: nextChecked } : i))
+    try {
+      await api('/api/ingredients', { method: 'PATCH', body: JSON.stringify({ name, checked: nextChecked }) })
+    } catch {
+      setIngredients(prev => prev.map(i => i.name === name ? { ...i, checked: !nextChecked } : i))
+      setError('Failed to update ingredient.')
+    }
   }
 
-  function setIngredientCategory(name, categoryId) {
-    setIngredients(prev =>
-      prev.map(i => i.name === name ? { ...i, categoryId } : i)
-    )
+  async function setIngredientCategory(name, categoryId) {
+    const prev = ingredients
+    setIngredients(list => list.map(i => i.name === name ? { ...i, categoryId } : i))
+    try {
+      await api('/api/ingredients', { method: 'PATCH', body: JSON.stringify({ name, categoryId }) })
+    } catch {
+      setIngredients(prev)
+      setError('Failed to move ingredient.')
+    }
   }
 
-  function addCategory(name) {
+  async function addCategory(name) {
     const val = name.trim()
     if (!val || categories.some(c => c.name.toLowerCase() === val.toLowerCase())) return false
-    setCategories(prev => [...prev, { id: nextCategoryId, name: val }])
-    setNextCategoryId(n => n + 1)
-    return true
+    try {
+      const created = await api('/api/categories', { method: 'POST', body: JSON.stringify({ name: val }) })
+      setCategories(prev => [...prev, created])
+      return true
+    } catch {
+      setError('Failed to add category.')
+      return false
+    }
   }
 
-  function renameCategory(id, name) {
+  async function renameCategory(id, name) {
     const val = name.trim()
     if (!val) return false
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, name: val } : c))
-    return true
+    const prev = categories
+    setCategories(list => list.map(c => c.id === id ? { ...c, name: val } : c))
+    try {
+      await api('/api/categories', { method: 'PATCH', body: JSON.stringify({ id, name: val }) })
+      return true
+    } catch {
+      setCategories(prev)
+      setError('Failed to rename category.')
+      return false
+    }
   }
 
-  function removeCategory(id) {
-    setCategories(prev => prev.filter(c => c.id !== id))
-    setIngredients(prev =>
-      prev.map(i => i.categoryId === id ? { ...i, categoryId: null } : i)
-    )
+  async function removeCategory(id) {
+    const prevCategories = categories
+    const prevIngredients = ingredients
+    setCategories(list => list.filter(c => c.id !== id))
+    setIngredients(list => list.map(i => i.categoryId === id ? { ...i, categoryId: null } : i))
+    try {
+      await api(`/api/categories?id=${id}`, { method: 'DELETE' })
+    } catch {
+      setCategories(prevCategories)
+      setIngredients(prevIngredients)
+      setError('Failed to delete category.')
+    }
   }
 
-  function addRecipe(name, ings) {
-    const recipe = { id: nextId, name: name.trim(), ings }
-    setRecipes(prev => [...prev, recipe])
-    setNextId(n => n + 1)
-    return recipe
+  async function addRecipe(name, ings) {
+    try {
+      const created = await api('/api/recipes', { method: 'POST', body: JSON.stringify({ name: name.trim(), ings }) })
+      setRecipes(prev => [...prev, created])
+      return created
+    } catch {
+      setError('Failed to add recipe.')
+      return null
+    }
   }
 
-  function removeRecipe(id) {
-    setRecipes(prev => prev.filter(r => r.id !== id))
+  async function removeRecipe(id) {
+    const prev = recipes
+    setRecipes(list => list.filter(r => r.id !== id))
+    try {
+      await api(`/api/recipes?id=${id}`, { method: 'DELETE' })
+    } catch {
+      setRecipes(prev)
+      setError('Failed to delete recipe.')
+    }
   }
 
-  function updateRecipeIngs(id, ings) {
-    setRecipes(prev => prev.map(r => r.id === id ? { ...r, ings } : r))
+  async function updateRecipeIngs(id, ings) {
+    const prev = recipes
+    setRecipes(list => list.map(r => r.id === id ? { ...r, ings } : r))
+    try {
+      await api('/api/recipes', { method: 'PATCH', body: JSON.stringify({ id, ings }) })
+    } catch {
+      setRecipes(prev)
+      setError('Failed to update recipe.')
+    }
   }
 
   function getMatch(recipe) {
@@ -136,6 +173,9 @@ export function useStore() {
     ingredients,
     recipes,
     categories,
+    loading,
+    error,
+    clearError: () => setError(null),
     addIngredient,
     removeIngredient,
     toggleIngredient,
