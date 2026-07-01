@@ -1,4 +1,5 @@
 import { sql } from './_db.js'
+import { requireAuth } from './_auth.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,11 +7,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  const session = await requireAuth(req, res)
+  if (!session) return
+
   const [ingredientRows, categoryRows, recipeRows, recipeIngredientRows] = await Promise.all([
-    sql`SELECT name, checked, category_id AS "categoryId" FROM ingredients ORDER BY name`,
-    sql`SELECT id, name FROM categories ORDER BY name`,
-    sql`SELECT id, name FROM recipes ORDER BY id`,
-    sql`SELECT recipe_id AS "recipeId", name, essential FROM recipe_ingredients`,
+    sql`SELECT name, checked, category_id AS "categoryId" FROM ingredients WHERE user_id = ${session.userId} ORDER BY name`,
+    sql`SELECT id, name FROM categories WHERE user_id = ${session.userId} ORDER BY name`,
+    sql`SELECT id, name FROM recipes WHERE user_id = ${session.userId} ORDER BY id`,
+    sql`
+      SELECT recipe_id AS "recipeId", name, essential FROM recipe_ingredients
+      WHERE recipe_id IN (SELECT id FROM recipes WHERE user_id = ${session.userId})
+    `,
   ])
 
   const ingsByRecipe = new Map()

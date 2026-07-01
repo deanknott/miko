@@ -1,11 +1,17 @@
 import { sql } from './_db.js'
+import { requireAuth } from './_auth.js'
 
 export default async function handler(req, res) {
+  const session = await requireAuth(req, res)
+  if (!session) return
+
   if (req.method === 'POST') {
     const name = (req.body?.name || '').trim()
     const ings = Array.isArray(req.body?.ings) ? req.body.ings : []
     if (!name || ings.length === 0) return res.status(400).json({ error: 'name and ings are required' })
-    const [{ id }] = await sql`INSERT INTO recipes (name) VALUES (${name}) RETURNING id`
+    const [{ id }] = await sql`
+      INSERT INTO recipes (name, user_id) VALUES (${name}, ${session.userId}) RETURNING id
+    `
     for (const ing of ings) {
       await sql`
         INSERT INTO recipe_ingredients (recipe_id, name, essential)
@@ -18,6 +24,8 @@ export default async function handler(req, res) {
   if (req.method === 'PATCH') {
     const { id, ings } = req.body || {}
     if (!id || !Array.isArray(ings)) return res.status(400).json({ error: 'id and ings are required' })
+    const [recipe] = await sql`SELECT id FROM recipes WHERE id = ${id} AND user_id = ${session.userId}`
+    if (!recipe) return res.status(404).json({ error: 'Recipe not found' })
     await sql`DELETE FROM recipe_ingredients WHERE recipe_id = ${id}`
     for (const ing of ings) {
       await sql`
@@ -31,7 +39,7 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     const id = req.query?.id
     if (!id) return res.status(400).json({ error: 'id is required' })
-    await sql`DELETE FROM recipes WHERE id = ${id}`
+    await sql`DELETE FROM recipes WHERE id = ${id} AND user_id = ${session.userId}`
     return res.status(200).json({ ok: true })
   }
 

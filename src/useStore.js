@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react'
-
-async function api(path, options) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) throw new Error(`${path} failed: ${res.status}`)
-  return res.status === 204 ? null : res.json()
-}
+import { api } from './apiClient.js'
 
 export function useStore() {
   const [ingredients, setIngredients] = useState([])

@@ -1,0 +1,117 @@
+.wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 3rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  padding: 0 1.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+
+.wordmark {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  color: var(--text-primary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus { border-color: var(--border-strong); }
+
+.error {
+  font-size: 13px;
+  color: var(--red-text);
+  background: var(--red-bg);
+  padding: 8px 10px;
+  border-radius: var(--radius);
+}
+
+.success {
+  font-size: 13px;
+  color: var(--green-text);
+  background: var(--green-bg);
+  padding: 8px 10px;
+  border-radius: var(--radius);
+}
+
+.submitBtn {
+  height: 38px;
+  padding: 0 16px;
+  background: var(--text-primary);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.12s;
+  margin-top: 4px;
+}
+
+.submitBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.submitBtn:not(:disabled):hover { opacity: 0.8; }
+
+.switchRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 1.25rem;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: left;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.linkBtn:hover { color: var(--text-primary); }
