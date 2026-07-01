@@ -47,6 +47,72 @@
 
 .empty { font-size: 14px; color: var(--text-muted); }
 
+.category {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.categoryOver {
+  border-color: var(--border-strong);
+  background: var(--bg-subtle);
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.categoryName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.categoryNameInput {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.categoryActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categoryDeleteBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.12s;
+}
+
+.categoryDeleteBtn:hover { color: var(--red-text); }
+
+.categoryEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+
 .list {
   list-style: none;
   border: 1px solid var(--border);
@@ -61,12 +127,36 @@
   padding: 11px 14px;
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
+  cursor: grab;
+  touch-action: none;
 }
 
 .row:last-child { border-bottom: none; }
 .row:hover { background: var(--bg-subtle); }
+.row:active { cursor: grabbing; }
 
 .rowUnchecked { opacity: 0.45; }
+.rowDragging { opacity: 0.4; cursor: grabbing; }
+
+.dragHandle {
+  color: var(--text-muted);
+  padding: 0 4px 0 0;
+  flex-shrink: 0;
+}
+
+.editBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.editBtn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.editBtnActive { border-color: var(--border-strong); color: var(--text-primary); }
 
 .label {
   display: flex;

@@ -34,3 +34,11 @@ export function loadRecipes(fallback) {
 export function saveRecipes(recipes) {
   save('recipes', recipes)
 }
+
+export function loadCategories(fallback) {
+  return load('categories', fallback)
+}
+
+export function saveCategories(categories) {
+  save('categories', categories)
+}

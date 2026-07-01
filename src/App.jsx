@@ -40,9 +40,14 @@ export default function App() {
         {activeTab === 'ingredients' && (
           <Ingredients
             ingredients={store.ingredients}
+            categories={store.categories}
             addIngredient={store.addIngredient}
             removeIngredient={store.removeIngredient}
             toggleIngredient={store.toggleIngredient}
+            setIngredientCategory={store.setIngredientCategory}
+            addCategory={store.addCategory}
+            renameCategory={store.renameCategory}
+            removeCategory={store.removeCategory}
           />
         )}
         {activeTab === 'recipes' && (

@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
-import { loadIngredients, saveIngredients, loadRecipes, saveRecipes } from './storage.js'
+import {
+  loadIngredients, saveIngredients,
+  loadRecipes, saveRecipes,
+  loadCategories, saveCategories,
+} from './storage.js'
 
 const DEFAULT_INGREDIENTS = [
   'eggs', 'butter', 'onion', 'garlic', 'pasta', 'pepper', 'mushroom',
@@ -10,7 +14,9 @@ const DEFAULT_INGREDIENTS = [
   'brown sugar', 'five spice', 'ginger', 'rice', 'wraps', 'fajita seasoning', 'cream cheese',
   'hot chilli sauce', 'mac and cheese', 'feta', 'pasta bake sauce', 'roasties', 'gravy',
   'enchilada kit',
-].map(name => ({ name, checked: true }))
+].map(name => ({ name, checked: true, categoryId: null }))
+
+const DEFAULT_CATEGORIES = []
 
 const DEFAULT_RECIPES = [
   { id: 1,  name: 'Halloumi curry',      ings: [{ name: 'rice', essential: true }, { name: 'curry sauce', essential: true }, { name: 'halloumi', essential: false }, { name: 'onion', essential: false }, { name: 'pepper', essential: false }, { name: 'mushroom', essential: false }] },
@@ -34,18 +40,24 @@ const DEFAULT_RECIPES = [
 export function useStore() {
   const [ingredients, setIngredients] = useState(() => loadIngredients(DEFAULT_INGREDIENTS))
   const [recipes, setRecipes] = useState(() => loadRecipes(DEFAULT_RECIPES))
+  const [categories, setCategories] = useState(() => loadCategories(DEFAULT_CATEGORIES))
   const [nextId, setNextId] = useState(() => {
     const ids = recipes.map(r => r.id)
+    return ids.length ? Math.max(...ids) + 1 : 1
+  })
+  const [nextCategoryId, setNextCategoryId] = useState(() => {
+    const ids = categories.map(c => c.id)
     return ids.length ? Math.max(...ids) + 1 : 1
   })
 
   useEffect(() => saveIngredients(ingredients), [ingredients])
   useEffect(() => saveRecipes(recipes), [recipes])
+  useEffect(() => saveCategories(categories), [categories])
 
   function addIngredient(name) {
     const val = name.trim().toLowerCase()
     if (!val || ingredients.some(i => i.name === val)) return false
-    setIngredients(prev => [...prev, { name: val, checked: true }])
+    setIngredients(prev => [...prev, { name: val, checked: true, categoryId: null }])
     return true
   }
 
@@ -56,6 +68,34 @@ export function useStore() {
   function toggleIngredient(name) {
     setIngredients(prev =>
       prev.map(i => i.name === name ? { ...i, checked: !i.checked } : i)
+    )
+  }
+
+  function setIngredientCategory(name, categoryId) {
+    setIngredients(prev =>
+      prev.map(i => i.name === name ? { ...i, categoryId } : i)
+    )
+  }
+
+  function addCategory(name) {
+    const val = name.trim()
+    if (!val || categories.some(c => c.name.toLowerCase() === val.toLowerCase())) return false
+    setCategories(prev => [...prev, { id: nextCategoryId, name: val }])
+    setNextCategoryId(n => n + 1)
+    return true
+  }
+
+  function renameCategory(id, name) {
+    const val = name.trim()
+    if (!val) return false
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, name: val } : c))
+    return true
+  }
+
+  function removeCategory(id) {
+    setCategories(prev => prev.filter(c => c.id !== id))
+    setIngredients(prev =>
+      prev.map(i => i.categoryId === id ? { ...i, categoryId: null } : i)
     )
   }
 
@@ -95,9 +135,14 @@ export function useStore() {
   return {
     ingredients,
     recipes,
+    categories,
     addIngredient,
     removeIngredient,
     toggleIngredient,
+    setIngredientCategory,
+    addCategory,
+    renameCategory,
+    removeCategory,
     addRecipe,
     removeRecipe,
     updateRecipeIngs,
