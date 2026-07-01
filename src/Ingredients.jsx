@@ -1,6 +1,12 @@
 import { useState } from 'react'
-import { DndContext, closestCenter, useDraggable, useDroppable } from '@dnd-kit/core'
+import {
+  DndContext, closestCenter, useDraggable, useDroppable,
+  useSensor, useSensors, PointerSensor, TouchSensor,
+} from '@dnd-kit/core'
 import styles from './Ingredients.module.css'
+
+const HOLD_DELAY_MS = 200
+const HOLD_TOLERANCE_PX = 5
 
 function byName(a, b) {
   return a.name.localeCompare(b.name)
@@ -116,6 +122,15 @@ export default function Ingredients({
   const [input, setInput] = useState('')
   const [categoryInput, setCategoryInput] = useState('')
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: HOLD_DELAY_MS, tolerance: HOLD_TOLERANCE_PX },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: HOLD_DELAY_MS, tolerance: HOLD_TOLERANCE_PX },
+    }),
+  )
+
   function handleAdd() {
     if (addIngredient(input)) setInput('')
   }
@@ -166,7 +181,7 @@ export default function Ingredients({
       {ingredients.length === 0 ? (
         <p className={styles.empty}>No ingredients yet. Add what's in your kitchen.</p>
       ) : (
-        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           {categories.map(category => (
             <CategorySection
               key={category.id}
