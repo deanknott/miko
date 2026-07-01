@@ -35,6 +35,20 @@ npm run db:migrate-auth              # creates users/password_reset_tokens table
 npm run db:claim-data you@example.com   # reassigns pre-existing ingredients/recipes to that account
 ```
 
+### AI Ideas setup (per account, no env vars needed)
+
+The "AI Ideas" tab suggests recipes from your checked-off ingredients using any OpenAI-compatible chat completions
+endpoint (OpenAI itself, a local Ollama/LM Studio server, OpenRouter, Groq, etc.) — configured per-account on the
+Settings tab (endpoint URL, model name, API key). The key is encrypted at rest using a key derived from
+`SESSION_SECRET`, so no extra env var is required. Run once against the live database:
+
+```bash
+npm run db:migrate-ai-settings   # adds ai_endpoint_url/ai_model/ai_api_key_encrypted columns to users
+```
+
+This feature asks the model to recommend recipes from its own training knowledge — it does not perform a live web
+search (a generic OpenAI-compatible endpoint has no standard way to do that).
+
 ## Scripts
 
 | Command | Description |
@@ -46,6 +60,7 @@ npm run db:claim-data you@example.com   # reassigns pre-existing ingredients/rec
 | `npm run db:init` | Create tables and seed default data (safe to re-run — skips seeding if tables already have rows) |
 | `npm run db:migrate-auth` | One-time: create `users`/`password_reset_tokens` tables and add nullable `user_id` columns |
 | `npm run db:claim-data <email>` | One-time: reassign pre-auth ingredients/recipes/categories to the given account and finalize per-user constraints |
+| `npm run db:migrate-ai-settings` | One-time: add AI provider settings columns to `users` (safe to re-run) |
 
 ## Structure
 
@@ -54,10 +69,13 @@ api/
   _db.js             # Shared Neon Postgres client (reads miko_DATABASE_URL)
   _auth.js           # Password hashing, session signing/cookies, requireAuth guard
   _email.js          # Resend wrapper for password-reset emails
+  _crypto.js         # AES-256-GCM encrypt/decrypt for the AI provider API key at rest
   state.js           # GET  /api/state       — full { ingredients, categories, recipes } for the signed-in user
   ingredients.js     # POST/PATCH/DELETE     — add, toggle/move, remove (scoped to the signed-in user)
   categories.js      # POST/PATCH/DELETE     — add, rename, delete (uncategorizes ingredients)
   recipes.js         # POST/PATCH/DELETE     — add, update ingredients, remove
+  settings.js        # GET/PATCH             — the signed-in user's AI provider settings
+  suggest-ai.js      # POST                  — calls the user's configured OpenAI-compatible endpoint
   auth/
     signup.js         # POST /api/auth/signup
     login.js          # POST /api/auth/login
@@ -69,6 +87,7 @@ scripts/
   init-db.mjs               # Creates tables + seeds defaults (npm run db:init)
   migrate-auth.mjs          # One-time: users/password_reset_tokens tables + nullable user_id columns
   claim-existing-data.mjs   # One-time: assigns pre-auth data to a real account by email
+  migrate-ai-settings.mjs   # One-time: adds AI provider settings columns to users
 src/
   main.jsx          # React entry point
   App.jsx           # Thin auth-gating shell — reset-password link, loading, Auth, or MainApp
@@ -86,6 +105,10 @@ src/
   Recipes.module.css
   Suggest.jsx       # Tonight's pick — ranked by ingredient match
   Suggest.module.css
+  AISuggest.jsx     # AI Ideas tab — recipe suggestions from the configured AI provider
+  AISuggest.module.css
+  Settings.jsx      # AI provider settings form (endpoint URL, model, API key)
+  Settings.module.css
   MatchBar.jsx      # Shared progress bar component
   MatchBar.module.css
   index.css         # Global CSS variables (light + dark mode)

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "db:init": "node --env-file=.env.local scripts/init-db.mjs",
     "db:migrate-auth": "node --env-file=.env.local scripts/migrate-auth.mjs",
-    "db:claim-data": "node --env-file=.env.local scripts/claim-existing-data.mjs"
+    "db:claim-data": "node --env-file=.env.local scripts/claim-existing-data.mjs",
+    "db:migrate-ai-settings": "node --env-file=.env.local scripts/migrate-ai-settings.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

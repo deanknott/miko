@@ -3,12 +3,16 @@ import { useStore } from './useStore.js'
 import Ingredients from './Ingredients.jsx'
 import Recipes from './Recipes.jsx'
 import Suggest from './Suggest.jsx'
+import AISuggest from './AISuggest.jsx'
+import Settings from './Settings.jsx'
 import styles from './App.module.css'
 
 const TABS = [
   { id: 'ingredients', label: 'Ingredients' },
   { id: 'recipes', label: 'Recipes' },
   { id: 'suggest', label: "Tonight's pick" },
+  { id: 'ai-suggest', label: 'AI Ideas' },
+  { id: 'settings', label: 'Settings' },
 ]
 
 export default function MainApp({ user, onLogout }) {
@@ -81,6 +85,10 @@ export default function MainApp({ user, onLogout }) {
             recipes={store.recipes}
           />
         )}
+        {activeTab === 'ai-suggest' && (
+          <AISuggest onGoToSettings={() => setActiveTab('settings')} />
+        )}
+        {activeTab === 'settings' && <Settings />}
         </>
         )}
       </main>
