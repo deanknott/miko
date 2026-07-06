@@ -12,11 +12,11 @@ const TABS = [
   { id: 'recipes', label: 'Recipes' },
   { id: 'suggest', label: "Tonight's pick" },
   { id: 'ai-suggest', label: 'AI Ideas' },
-  { id: 'settings', label: 'Settings' },
 ]
 
 export default function MainApp({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('ingredients')
+  const [menuOpen, setMenuOpen] = useState(false)
   const store = useStore()
 
   return (
@@ -27,6 +27,28 @@ export default function MainApp({ user, onLogout }) {
         <div className={styles.headerRight}>
           <span className={styles.userEmail}>{user.email}</span>
           <button onClick={onLogout} className={styles.logoutBtn}>Log out</button>
+          <div className={styles.menuWrap}>
+            <button
+              onClick={() => setMenuOpen(open => !open)}
+              onBlur={() => setMenuOpen(false)}
+              className={styles.menuBtn}
+              aria-label="Menu"
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+            >
+              ☰
+            </button>
+            {menuOpen && (
+              <div className={styles.menuDropdown}>
+                <button
+                  onMouseDown={e => { e.preventDefault(); setActiveTab('settings'); setMenuOpen(false) }}
+                  className={styles.menuItem}
+                >
+                  Settings
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
