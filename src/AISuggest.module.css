@@ -62,11 +62,24 @@
   background: var(--bg-subtle);
 }
 
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .cardName {
   font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 6px;
+}
+
+.cookingTime {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .description {
@@ -89,3 +102,13 @@
   background: var(--green-bg);
   color: var(--green-text);
 }
+
+.steps {
+  margin-top: 10px;
+  padding-left: 1.25rem;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.steps li + li { margin-top: 4px; }

@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
   const apiKey = decryptSecret(user.aiApiKeyEncrypted)
 
-  const systemPrompt = 'You are a helpful cooking assistant. Given a list of available ingredients, suggest recipes that can be made using some or all of them. Respond ONLY with valid JSON in this exact shape, with no other text: {"recipes": [{"name": string, "description": string, "ingredientsUsed": string[]}]}. Suggest 3 to 5 recipes.'
+  const systemPrompt = 'You are a helpful cooking assistant. Given a list of available ingredients, suggest recipes that can be made using some or all of them. Respond ONLY with valid JSON in this exact shape, with no other text: {"recipes": [{"name": string, "description": string, "ingredientsUsed": string[], "steps": string[], "cookingTime": string}]}. "steps" should be the ordered cooking instructions, one instruction per array entry. "cookingTime" should be a short human-readable estimate, e.g. "25 minutes". Suggest 3 to 5 recipes.'
   const userPrompt = `Available ingredients: ${ingredientNames.join(', ')}.`
 
   let upstreamResponse

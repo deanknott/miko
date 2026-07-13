@@ -48,7 +48,10 @@ export default function AISuggest({ onGoToSettings }) {
         <div className={styles.results}>
           {recipes.map((recipe, i) => (
             <div key={i} className={styles.card}>
-              <div className={styles.cardName}>{recipe.name}</div>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardName}>{recipe.name}</div>
+                {recipe.cookingTime && <span className={styles.cookingTime}>{recipe.cookingTime}</span>}
+              </div>
               {recipe.description && <p className={styles.description}>{recipe.description}</p>}
               {Array.isArray(recipe.ingredientsUsed) && recipe.ingredientsUsed.length > 0 && (
                 <div className={styles.tags}>
@@ -56,6 +59,13 @@ export default function AISuggest({ onGoToSettings }) {
                     <span key={ing} className={styles.tag}>{ing}</span>
                   ))}
                 </div>
+              )}
+              {Array.isArray(recipe.steps) && recipe.steps.length > 0 && (
+                <ol className={styles.steps}>
+                  {recipe.steps.map((step, stepIndex) => (
+                    <li key={stepIndex}>{step}</li>
+                  ))}
+                </ol>
               )}
             </div>
           ))}
