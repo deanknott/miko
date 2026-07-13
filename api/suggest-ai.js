@@ -61,7 +61,18 @@ export default async function handler(req, res) {
   }
 
   if (!upstreamResponse.ok) {
-    return res.status(502).json({ error: `Your AI provider returned an error (${upstreamResponse.status}).` })
+    let detail = null
+    try {
+      const errorBody = await upstreamResponse.json()
+      // Most providers return a bare {"error": {"message": ...}} object, but
+      // Gemini's OpenAI-compatible endpoint wraps it in an array: [{"error": {...}}].
+      const errorObj = Array.isArray(errorBody) ? errorBody[0] : errorBody
+      detail = errorObj?.error?.message || errorObj?.message || null
+    } catch {
+      // upstream didn't return JSON — fall back to just the status
+    }
+    const suffix = detail ? `: ${detail.slice(0, 200)}` : '.'
+    return res.status(502).json({ error: `Your AI provider returned an error (${upstreamResponse.status})${suffix}` })
   }
 
   const data = await upstreamResponse.json()
