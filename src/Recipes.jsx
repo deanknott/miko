@@ -11,6 +11,14 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
     onUpdateIngs(recipe.id, updated)
   }
 
+  function renameIngredient(oldName, rawNewName) {
+    const newName = rawNewName.trim().toLowerCase()
+    if (!newName || newName === oldName) return
+    if (recipe.ings.some(i => i.name === newName)) return
+    const updated = recipe.ings.map(i => i.name === oldName ? { ...i, name: newName } : i)
+    onUpdateIngs(recipe.id, updated)
+  }
+
   return (
     <div className={`${styles.card} ${match.unmakable ? styles.cardUnmakable : ''}`}>
       <div className={styles.cardHeader}>
@@ -37,7 +45,7 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
 
       {editing ? (
         <>
-          <p className={styles.essentialHint}>Tap ★ to toggle essential</p>
+          <p className={styles.essentialHint}>Tap ★ to toggle essential · click a name to rename</p>
           <div className={styles.chipGrid} style={{ marginTop: '10px' }}>
             {recipe.ings.map(ing => {
               const inStock = match.have.includes(ing.name)
@@ -51,7 +59,15 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
                   >
                     ★
                   </button>
-                  <span>{ing.name}</span>
+                  <input
+                    type="text"
+                    defaultValue={ing.name}
+                    size={Math.max(ing.name.length, 4)}
+                    onBlur={e => renameIngredient(ing.name, e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+                    className={styles.chipNameInput}
+                    aria-label={`Rename ${ing.name}`}
+                  />
                 </div>
               )
             })}

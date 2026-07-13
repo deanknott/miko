@@ -240,6 +240,18 @@
 
 .essentialBtn:hover { color: var(--text-primary); }
 
+.chipNameInput {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  padding: 0;
+  outline: none;
+}
+
+.chipNameInput:focus { text-decoration: underline; }
+
 .chipRemove {
   background: none;
   border: none;
