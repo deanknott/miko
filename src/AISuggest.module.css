@@ -112,3 +112,18 @@
 }
 
 .steps li + li { margin-top: 4px; }
+
+.addRecipeBtn {
+  height: 32px;
+  padding: 0 14px;
+  margin-top: 12px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition: all 0.12s;
+}
+
+.addRecipeBtn:not(:disabled):hover { border-color: var(--border-strong); color: var(--text-primary); }
+.addRecipeBtn:disabled { color: var(--green-text); border-color: var(--green-bg); cursor: default; }

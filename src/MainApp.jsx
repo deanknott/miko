@@ -108,7 +108,7 @@ export default function MainApp({ user, onLogout }) {
           />
         )}
         {activeTab === 'ai-suggest' && (
-          <AISuggest onGoToSettings={() => setActiveTab('settings')} />
+          <AISuggest onGoToSettings={() => setActiveTab('settings')} addRecipe={store.addRecipe} />
         )}
         {activeTab === 'settings' && <Settings />}
         </>

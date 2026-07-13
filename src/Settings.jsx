@@ -13,14 +13,20 @@ export default function Settings() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    // StrictMode double-invokes this effect in dev, firing two independent
+    // /api/settings requests — without this guard, whichever response arrives
+    // last can overwrite fields the user has already started editing.
+    let ignore = false
     api('/api/settings')
       .then(data => {
+        if (ignore) return
         setAiEndpointUrl(data.aiEndpointUrl)
         setAiModel(data.aiModel)
         setHasApiKey(data.hasApiKey)
       })
-      .catch(() => setError('Failed to load settings.'))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!ignore) setError('Failed to load settings.') })
+      .finally(() => { if (!ignore) setLoading(false) })
+    return () => { ignore = true }
   }, [])
 
   async function handleSave(e) {

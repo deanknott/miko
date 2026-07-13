@@ -2,15 +2,17 @@ import { useState } from 'react'
 import { api } from './apiClient.js'
 import styles from './AISuggest.module.css'
 
-export default function AISuggest({ onGoToSettings }) {
+export default function AISuggest({ onGoToSettings, addRecipe }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [recipes, setRecipes] = useState(null)
+  const [addedIndexes, setAddedIndexes] = useState(new Set())
 
   async function handleGetSuggestions() {
     setLoading(true)
     setError(null)
     setRecipes(null)
+    setAddedIndexes(new Set())
     try {
       const data = await api('/api/suggest-ai', { method: 'POST' })
       setRecipes(data.recipes)
@@ -19,6 +21,12 @@ export default function AISuggest({ onGoToSettings }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleAddToRecipes(recipe, index) {
+    const ings = recipe.ingredientsUsed.map(name => ({ name: name.trim().toLowerCase(), essential: false }))
+    const created = await addRecipe(recipe.name, ings)
+    if (created) setAddedIndexes(prev => new Set(prev).add(index))
   }
 
   return (
@@ -66,6 +74,15 @@ export default function AISuggest({ onGoToSettings }) {
                     <li key={stepIndex}>{step}</li>
                   ))}
                 </ol>
+              )}
+              {Array.isArray(recipe.ingredientsUsed) && recipe.ingredientsUsed.length > 0 && (
+                <button
+                  onClick={() => handleAddToRecipes(recipe, i)}
+                  className={styles.addRecipeBtn}
+                  disabled={addedIndexes.has(i)}
+                >
+                  {addedIndexes.has(i) ? 'Added ✓' : 'Add to Recipes'}
+                </button>
               )}
             </div>
           ))}

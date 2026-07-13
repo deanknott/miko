@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
   const apiKey = decryptSecret(user.aiApiKeyEncrypted)
 
-  const systemPrompt = 'You are a helpful cooking assistant. Given a list of available ingredients, suggest recipes that can be made using some or all of them. Respond ONLY with valid JSON in this exact shape, with no other text: {"recipes": [{"name": string, "description": string, "ingredientsUsed": string[], "steps": string[], "cookingTime": string}]}. "steps" should be the ordered cooking instructions, one instruction per array entry. "cookingTime" should be a short human-readable estimate, e.g. "25 minutes". Suggest 3 to 5 recipes.'
+  const systemPrompt = 'You are a helpful cooking assistant. Given a list of available ingredients, suggest recipes that can be made using ONLY those ingredients — do not invent or include any ingredient that is not explicitly in the provided list, including common staples like salt, pepper, oil, or water, unless they appear in the list. Respond ONLY with valid JSON in this exact shape, with no other text: {"recipes": [{"name": string, "description": string, "ingredientsUsed": string[], "steps": string[], "cookingTime": string}]}. "ingredientsUsed" must be a subset of the provided ingredient list. "steps" should be the ordered cooking instructions, one instruction per array entry. "cookingTime" should be a short human-readable estimate, e.g. "25 minutes". Suggest 3 to 5 recipes.'
   const userPrompt = `Available ingredients: ${ingredientNames.join(', ')}.`
 
   let upstreamResponse
@@ -92,5 +92,16 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: "Your AI provider's response wasn't in the expected format." })
   }
 
-  return res.status(200).json({ recipes: parsed.recipes })
+  // Safety net: the model can still hallucinate an ingredient outside the
+  // provided list despite the prompt instruction, so filter it back down
+  // to only what's actually in the pantry and checked.
+  const checkedNames = new Set(ingredientNames.map(n => n.toLowerCase()))
+  const recipes = parsed.recipes.map(recipe => ({
+    ...recipe,
+    ingredientsUsed: Array.isArray(recipe.ingredientsUsed)
+      ? recipe.ingredientsUsed.filter(ing => checkedNames.has(String(ing).trim().toLowerCase()))
+      : [],
+  }))
+
+  return res.status(200).json({ recipes })
 }
