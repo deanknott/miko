@@ -138,12 +138,6 @@
 .rowUnchecked { opacity: 0.45; }
 .rowDragging { opacity: 0.4; cursor: grabbing; }
 
-.dragHandle {
-  color: var(--text-muted);
-  padding: 0 4px 0 0;
-  flex-shrink: 0;
-}
-
 .editBtn {
   background: none;
   border: 1px solid var(--border);

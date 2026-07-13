@@ -29,7 +29,6 @@ function IngredientRow({ ing, toggleIngredient, removeIngredient }) {
       aria-roledescription={`Draggable ingredient, ${ing.name}`}
       className={`${styles.row} ${!ing.checked ? styles.rowUnchecked : ''} ${isDragging ? styles.rowDragging : ''}`}
     >
-      <span className={styles.dragHandle} aria-hidden="true">⠿</span>
       <label className={styles.label}>
         <input
           type="checkbox"
