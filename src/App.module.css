@@ -10,6 +10,7 @@
   align-items: baseline;
   gap: 10px;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .headerRight {
@@ -84,11 +85,13 @@
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .tagline {
   font-size: 14px;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .tabs {
@@ -96,6 +99,8 @@
   gap: 0;
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab {
@@ -108,6 +113,8 @@
   margin-bottom: -1px;
   cursor: pointer;
   transition: color 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab:hover:not(.tabActive) { color: var(--text-primary); }
