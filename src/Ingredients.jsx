@@ -8,7 +8,8 @@ import styles from './Ingredients.module.css'
 const HOLD_DELAY_MS = 200
 const HOLD_TOLERANCE_PX = 5
 
-function byName(a, b) {
+function byCheckedThenName(a, b) {
+  if (a.checked !== b.checked) return a.checked ? -1 : 1
   return a.name.localeCompare(b.name)
 }
 
@@ -181,11 +182,11 @@ export default function Ingredients({
         <p className={styles.empty}>No ingredients yet. Add what's in your kitchen.</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          {categories.map(category => (
+          {[...categories].sort((a, b) => a.name.localeCompare(b.name)).map(category => (
             <CategorySection
               key={category.id}
               category={category}
-              ingredients={ingredients.filter(i => i.categoryId === category.id).sort(byName)}
+              ingredients={ingredients.filter(i => i.categoryId === category.id).sort(byCheckedThenName)}
               toggleIngredient={toggleIngredient}
               removeIngredient={removeIngredient}
               onRename={renameCategory}
@@ -194,7 +195,7 @@ export default function Ingredients({
           ))}
           <CategorySection
             category={null}
-            ingredients={ingredients.filter(i => i.categoryId == null).sort(byName)}
+            ingredients={ingredients.filter(i => i.categoryId == null).sort(byCheckedThenName)}
             toggleIngredient={toggleIngredient}
             removeIngredient={removeIngredient}
           />
