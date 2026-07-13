@@ -188,7 +188,9 @@ export default function Recipes({ recipes, ingredients, getMatch, addRecipe, rem
     setShowForm(false)
   }
 
-  const makable = recipes.filter(r => !getMatch(r).unmakable)
+  const makable = recipes
+    .filter(r => !getMatch(r).unmakable)
+    .sort((a, b) => getMatch(b).pct - getMatch(a).pct)
   const unmakable = recipes.filter(r => getMatch(r).unmakable)
 
   return (
