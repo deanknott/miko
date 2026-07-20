@@ -2,7 +2,60 @@ import { useState } from 'react'
 import MatchBar, { matchClass } from './MatchBar.jsx'
 import styles from './Recipes.module.css'
 
-function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
+function IngredientAutocomplete({ ingredients, excludeNames, onAdd }) {
+  const [input, setInput] = useState('')
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+
+  function handleAdd(rawValue) {
+    const val = (rawValue ?? input).trim().toLowerCase()
+    if (!val || excludeNames.includes(val)) return
+    onAdd(val)
+    setInput('')
+    setSuggestionsOpen(false)
+  }
+
+  return (
+    <div className={styles.autocompleteWrap}>
+      <div className={styles.addRow}>
+        <input
+          type="text"
+          value={input}
+          onChange={e => { setInput(e.target.value); setSuggestionsOpen(true) }}
+          onFocus={() => setSuggestionsOpen(true)}
+          onBlur={() => setSuggestionsOpen(false)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+          placeholder="Add an ingredient"
+          className={styles.input}
+        />
+        <button onClick={() => handleAdd()} className={styles.addBtn}>Add</button>
+      </div>
+      {suggestionsOpen && (() => {
+        const query = input.trim().toLowerCase()
+        const suggestions = ingredients
+          .filter(ing => !excludeNames.includes(ing.name))
+          .filter(ing => ing.name.includes(query))
+        if (suggestions.length === 0) return null
+        return (
+          <ul className={styles.suggestionList}>
+            {suggestions.map(ing => (
+              <li key={ing.name}>
+                <button
+                  type="button"
+                  onMouseDown={e => { e.preventDefault(); handleAdd(ing.name) }}
+                  className={styles.suggestionItem}
+                >
+                  {ing.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
+      })()}
+    </div>
+  )
+}
+
+function RecipeCard({ recipe, match, ingredients, onDelete, onUpdateIngs }) {
   const [editing, setEditing] = useState(false)
   const cls = match.unmakable ? 'unmakable' : matchClass(match.pct)
 
@@ -17,6 +70,15 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
     if (recipe.ings.some(i => i.name === newName)) return
     const updated = recipe.ings.map(i => i.name === oldName ? { ...i, name: newName } : i)
     onUpdateIngs(recipe.id, updated)
+  }
+
+  function addIngredient(name) {
+    onUpdateIngs(recipe.id, [...recipe.ings, { name, essential: false }])
+  }
+
+  function removeIngredient(name) {
+    if (recipe.ings.length <= 1) return
+    onUpdateIngs(recipe.id, recipe.ings.filter(i => i.name !== name))
   }
 
   return (
@@ -68,10 +130,24 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
                     className={styles.chipNameInput}
                     aria-label={`Rename ${ing.name}`}
                   />
+                  <button
+                    onClick={() => removeIngredient(ing.name)}
+                    className={styles.chipRemove}
+                    aria-label={`Remove ${ing.name}`}
+                    disabled={recipe.ings.length <= 1}
+                    title={recipe.ings.length <= 1 ? 'A recipe needs at least one ingredient' : undefined}
+                  >
+                    ×
+                  </button>
                 </div>
               )
             })}
           </div>
+          <IngredientAutocomplete
+            ingredients={ingredients}
+            excludeNames={recipe.ings.map(i => i.name)}
+            onAdd={addIngredient}
+          />
         </>
       ) : (
         <div className={styles.tags}>
@@ -94,16 +170,10 @@ function RecipeCard({ recipe, match, onDelete, onUpdateIngs }) {
 
 function AddRecipeForm({ ingredients, onSave, onCancel }) {
   const [name, setName] = useState('')
-  const [ingInput, setIngInput] = useState('')
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [ings, setIngs] = useState([])
 
-  function addIng(rawValue) {
-    const val = (rawValue ?? ingInput).trim().toLowerCase()
-    if (!val || ings.some(i => i.name === val)) return
-    setIngs(prev => [...prev, { name: val, essential: false }])
-    setIngInput('')
-    setSuggestionsOpen(false)
+  function addIng(name) {
+    setIngs(prev => [...prev, { name, essential: false }])
   }
 
   function removeIng(name) {
@@ -129,43 +199,11 @@ function AddRecipeForm({ ingredients, onSave, onCancel }) {
         placeholder="Recipe name (e.g. pasta carbonara)"
         className={styles.input}
       />
-      <div className={styles.autocompleteWrap}>
-        <div className={styles.addRow}>
-          <input
-            type="text"
-            value={ingInput}
-            onChange={e => { setIngInput(e.target.value); setSuggestionsOpen(true) }}
-            onFocus={() => setSuggestionsOpen(true)}
-            onBlur={() => setSuggestionsOpen(false)}
-            onKeyDown={e => e.key === 'Enter' && addIng()}
-            placeholder="Add an ingredient"
-            className={styles.input}
-          />
-          <button onClick={() => addIng()} className={styles.addBtn}>Add</button>
-        </div>
-        {suggestionsOpen && (() => {
-          const query = ingInput.trim().toLowerCase()
-          const suggestions = ingredients
-            .filter(ing => !ings.some(added => added.name === ing.name))
-            .filter(ing => ing.name.includes(query))
-          if (suggestions.length === 0) return null
-          return (
-            <ul className={styles.suggestionList}>
-              {suggestions.map(ing => (
-                <li key={ing.name}>
-                  <button
-                    type="button"
-                    onMouseDown={e => { e.preventDefault(); addIng(ing.name) }}
-                    className={styles.suggestionItem}
-                  >
-                    {ing.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )
-        })()}
-      </div>
+      <IngredientAutocomplete
+        ingredients={ingredients}
+        excludeNames={ings.map(i => i.name)}
+        onAdd={addIng}
+      />
       {ings.length > 0 && (
         <>
           <p className={styles.essentialHint}>Tap ★ to mark an ingredient as essential</p>
@@ -226,14 +264,14 @@ export default function Recipes({ recipes, ingredients, getMatch, addRecipe, rem
       )}
 
       {makable.map(r => (
-        <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
+        <RecipeCard key={r.id} recipe={r} match={getMatch(r)} ingredients={ingredients} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
       ))}
 
       {unmakable.length > 0 && (
         <>
           <p className={styles.sectionLabel}>Unmakable</p>
           {unmakable.map(r => (
-            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
+            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} ingredients={ingredients} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
           ))}
         </>
       )}

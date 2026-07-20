@@ -263,6 +263,8 @@
 }
 
 .chipRemove:hover { color: var(--text-primary); }
+.chipRemove:disabled { opacity: 0.3; cursor: not-allowed; }
+.chipRemove:disabled:hover { color: var(--text-muted); }
 
 .formActions {
   display: flex;
