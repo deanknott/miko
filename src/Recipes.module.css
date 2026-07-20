@@ -47,6 +47,21 @@
   color: var(--text-primary);
 }
 
+.cardNameInput {
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.cardNameInput:focus { text-decoration: underline; }
+
 .cardRight {
   display: flex;
   align-items: center;

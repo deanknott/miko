@@ -155,6 +155,21 @@ export function useStore() {
     }
   }
 
+  async function renameRecipe(id, name) {
+    const val = name.trim()
+    if (!val) return false
+    const prev = recipes
+    setRecipes(list => list.map(r => r.id === id ? { ...r, name: val } : r))
+    try {
+      await api('/api/recipes', { method: 'PATCH', body: JSON.stringify({ id, name: val }) })
+      return true
+    } catch {
+      setRecipes(prev)
+      setError('Failed to rename recipe.')
+      return false
+    }
+  }
+
   function getMatch(recipe) {
     const checkedNames = ingredients.filter(i => i.checked).map(i => i.name)
     const ingNames = recipe.ings.map(i => i.name)
@@ -190,6 +205,7 @@ export function useStore() {
     addRecipe,
     removeRecipe,
     updateRecipeIngs,
+    renameRecipe,
     getMatch,
     getSortedRecipes,
   }

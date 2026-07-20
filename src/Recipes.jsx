@@ -55,7 +55,7 @@ function IngredientAutocomplete({ ingredients, excludeNames, onAdd }) {
   )
 }
 
-function RecipeCard({ recipe, match, ingredients, onDelete, onUpdateIngs }) {
+function RecipeCard({ recipe, match, ingredients, onDelete, onUpdateIngs, onRename }) {
   const [editing, setEditing] = useState(false)
   const cls = match.unmakable ? 'unmakable' : matchClass(match.pct)
 
@@ -84,7 +84,18 @@ function RecipeCard({ recipe, match, ingredients, onDelete, onUpdateIngs }) {
   return (
     <div className={`${styles.card} ${match.unmakable ? styles.cardUnmakable : ''}`}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardName}>{recipe.name}</span>
+        {editing ? (
+          <input
+            type="text"
+            defaultValue={recipe.name}
+            onBlur={e => onRename(recipe.id, e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+            className={styles.cardNameInput}
+            aria-label={`Rename ${recipe.name}`}
+          />
+        ) : (
+          <span className={styles.cardName}>{recipe.name}</span>
+        )}
         <div className={styles.cardRight}>
           {match.unmakable
             ? <span className={styles.unmakableLabel}>unmakable</span>
@@ -93,11 +104,15 @@ function RecipeCard({ recipe, match, ingredients, onDelete, onUpdateIngs }) {
           <button
             onClick={() => setEditing(e => !e)}
             className={`${styles.editBtn} ${editing ? styles.editBtnActive : ''}`}
-            aria-label="Edit essential ingredients"
+            aria-label="Edit recipe"
           >
             edit
           </button>
-          <button onClick={() => onDelete(recipe.id)} className={styles.deleteBtn} aria-label={`Delete ${recipe.name}`}>
+          <button
+            onClick={() => { if (confirm(`Delete "${recipe.name}"?`)) onDelete(recipe.id) }}
+            className={styles.deleteBtn}
+            aria-label={`Delete ${recipe.name}`}
+          >
             ✕
           </button>
         </div>
@@ -107,7 +122,7 @@ function RecipeCard({ recipe, match, ingredients, onDelete, onUpdateIngs }) {
 
       {editing ? (
         <>
-          <p className={styles.essentialHint}>Tap ★ to toggle essential · click a name to rename</p>
+          <p className={styles.essentialHint}>Tap ★ to toggle essential · click a name to rename (including the recipe name above)</p>
           <div className={styles.chipGrid} style={{ marginTop: '10px' }}>
             {recipe.ings.map(ing => {
               const inStock = match.have.includes(ing.name)
@@ -234,7 +249,7 @@ function AddRecipeForm({ ingredients, onSave, onCancel }) {
   )
 }
 
-export default function Recipes({ recipes, ingredients, getMatch, addRecipe, removeRecipe, updateRecipeIngs }) {
+export default function Recipes({ recipes, ingredients, getMatch, addRecipe, removeRecipe, updateRecipeIngs, renameRecipe }) {
   const [showForm, setShowForm] = useState(false)
 
   function handleSave(name, ings) {
@@ -264,14 +279,14 @@ export default function Recipes({ recipes, ingredients, getMatch, addRecipe, rem
       )}
 
       {makable.map(r => (
-        <RecipeCard key={r.id} recipe={r} match={getMatch(r)} ingredients={ingredients} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
+        <RecipeCard key={r.id} recipe={r} match={getMatch(r)} ingredients={ingredients} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} onRename={renameRecipe} />
       ))}
 
       {unmakable.length > 0 && (
         <>
           <p className={styles.sectionLabel}>Unmakable</p>
           {unmakable.map(r => (
-            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} ingredients={ingredients} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} />
+            <RecipeCard key={r.id} recipe={r} match={getMatch(r)} ingredients={ingredients} onDelete={removeRecipe} onUpdateIngs={updateRecipeIngs} onRename={renameRecipe} />
           ))}
         </>
       )}

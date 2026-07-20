@@ -99,6 +99,7 @@ export default function MainApp({ user, onLogout }) {
             addRecipe={store.addRecipe}
             removeRecipe={store.removeRecipe}
             updateRecipeIngs={store.updateRecipeIngs}
+            renameRecipe={store.renameRecipe}
           />
         )}
         {activeTab === 'suggest' && (

@@ -40,18 +40,27 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PATCH') {
-    const { id, ings } = req.body || {}
-    if (!id || !Array.isArray(ings)) return res.status(400).json({ error: 'id and ings are required' })
+    const { id, name, ings } = req.body || {}
+    if (!id) return res.status(400).json({ error: 'id is required' })
     const [recipe] = await sql`SELECT id FROM recipes WHERE id = ${id} AND user_id = ${session.userId}`
     if (!recipe) return res.status(404).json({ error: 'Recipe not found' })
-    await sql`DELETE FROM recipe_ingredients WHERE recipe_id = ${id}`
-    for (const ing of ings) {
-      await sql`
-        INSERT INTO recipe_ingredients (recipe_id, name, essential)
-        VALUES (${id}, ${ing.name}, ${!!ing.essential})
-      `
+
+    if (typeof name === 'string' && name.trim()) {
+      await sql`UPDATE recipes SET name = ${name.trim()} WHERE id = ${id}`
     }
-    const newIngredients = await ensurePantryIngredients(session.userId, ings)
+
+    let newIngredients = []
+    if (Array.isArray(ings)) {
+      await sql`DELETE FROM recipe_ingredients WHERE recipe_id = ${id}`
+      for (const ing of ings) {
+        await sql`
+          INSERT INTO recipe_ingredients (recipe_id, name, essential)
+          VALUES (${id}, ${ing.name}, ${!!ing.essential})
+        `
+      }
+      newIngredients = await ensurePantryIngredients(session.userId, ings)
+    }
+
     return res.status(200).json({ ok: true, newIngredients })
   }
 

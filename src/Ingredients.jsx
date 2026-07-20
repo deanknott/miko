@@ -41,7 +41,7 @@ function IngredientRow({ ing, toggleIngredient, removeIngredient }) {
       </label>
       <button
         onPointerDown={e => e.stopPropagation()}
-        onClick={() => removeIngredient(ing.name)}
+        onClick={() => { if (confirm(`Remove "${ing.name}" from your ingredients?`)) removeIngredient(ing.name) }}
         className={styles.deleteBtn}
         aria-label={`Remove ${ing.name}`}
       >
@@ -86,7 +86,7 @@ function CategorySection({ category, ingredients, toggleIngredient, removeIngred
               edit
             </button>
             <button
-              onClick={() => onRemove(category.id)}
+              onClick={() => { if (confirm(`Delete category "${category.name}"? Its ingredients will become uncategorized.`)) onRemove(category.id) }}
               className={styles.categoryDeleteBtn}
               aria-label={`Delete category ${category.name}`}
             >
@@ -178,7 +178,7 @@ export default function Ingredients({
         {checkedCount} of {ingredients.length} in stock
       </p>
 
-      {ingredients.length === 0 ? (
+      {ingredients.length === 0 && categories.length === 0 ? (
         <p className={styles.empty}>No ingredients yet. Add what's in your kitchen.</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
