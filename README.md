@@ -25,7 +25,7 @@ Then open http://localhost:3000
 Requires two additional env vars beyond the database ones already pulled above:
 
 - `SESSION_SECRET` — a random signing key for session cookies. Generate one (`openssl rand -hex 32`) and add it via `vercel env add SESSION_SECRET` for all environments, then `vercel env pull .env.local` again locally.
-- `RESEND_API_KEY` — from a free [Resend](https://resend.com) account, used to send password-reset emails. Add it the same way.
+- `GMAIL_USER` / `GMAIL_APP_PASSWORD` — a Gmail account used to send password-reset emails via SMTP (`nodemailer`). Enable 2-Step Verification on the account, generate an [App Password](https://myaccount.google.com/apppasswords), and add both env vars the same way. Chosen over a dedicated transactional email provider (e.g. Resend) because those require a verified custom domain to send to arbitrary recipients — Gmail SMTP doesn't have that restriction, at the cost of Gmail's own sending limits (~500/day) and no delivery analytics.
 
 Then, once against the live database (only needed the first time auth is added to an existing deployment, or on any fresh database):
 
@@ -68,7 +68,7 @@ search (a generic OpenAI-compatible endpoint has no standard way to do that).
 api/
   _db.js             # Shared Neon Postgres client (reads miko_DATABASE_URL)
   _auth.js           # Password hashing, session signing/cookies, requireAuth guard
-  _email.js          # Resend wrapper for password-reset emails
+  _email.js          # Gmail SMTP wrapper (nodemailer) for password-reset emails
   _crypto.js         # AES-256-GCM encrypt/decrypt for the AI provider API key at rest
   state.js           # GET  /api/state       — full { ingredients, categories, recipes } for the signed-in user
   ingredients.js     # POST/PATCH/DELETE     — add, toggle/move, remove (scoped to the signed-in user)

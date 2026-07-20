@@ -4,7 +4,7 @@
 
 | File               | Purpose                                                                 |
 | ------------------ | ------------------------------------------------------------------------ |
-| `package.json`     | Scripts (`dev`, `dev:vercel`, `build`, `preview`, `db:*`), deps (React 18, Vite 5, `@dnd-kit/core`, `@neondatabase/serverless`, `bcryptjs`, `jose`, `cookie`, `resend`) |
+| `package.json`     | Scripts (`dev`, `dev:vercel`, `build`, `preview`, `db:*`), deps (React 18, Vite 5, `@dnd-kit/core`, `@neondatabase/serverless`, `bcryptjs`, `jose`, `cookie`, `nodemailer`) |
 | `package-lock.json`| Locked dependency tree                                                    |
 | `vite.config.js`   | Vite config — registers `@vitejs/plugin-react`, no other plugins/aliases  |
 | `README.md`        | Setup instructions (incl. Vercel/Postgres/auth/AI-settings one-time steps), scripts table, structure overview |
@@ -18,7 +18,7 @@
 | `api/_db.js`                   | Shared Neon Postgres client — `export const sql = neon(process.env.miko_DATABASE_URL)` |
 | `api/_auth.js`                 | `hashPassword`/`verifyPassword` (bcryptjs), `signSession`/`verifySession` (jose JWT), `buildSessionCookie`/`buildClearCookie`/`getSessionTokenFromRequest` (cookie), `requireAuth(req, res)` guard, `generateResetToken`/`hashResetToken`, `normalizeEmail`/`validateEmail`/`validatePassword` |
 | `api/_crypto.js`               | `encryptSecret`/`decryptSecret` — AES-256-GCM, key derived from `SESSION_SECRET`; used for the AI provider API key at rest |
-| `api/_email.js`                | `sendPasswordResetEmail(toEmail, resetUrl)` — thin Resend wrapper                    |
+| `api/_email.js`                | `sendPasswordResetEmail(toEmail, resetUrl)` — thin `nodemailer` wrapper over Gmail SMTP (`GMAIL_USER`/`GMAIL_APP_PASSWORD`) |
 | `api/state.js`                 | `GET` — full `{ ingredients, categories, recipes }` for the signed-in user            |
 | `api/ingredients.js`           | `POST`/`PATCH`/`DELETE` — add, toggle checked/move category, remove (all scoped to `session.userId`; `ON CONFLICT (user_id, name)`) |
 | `api/categories.js`            | `POST`/`PATCH`/`DELETE` — add, rename, delete (delete also uncategorizes that category's ingredients) |

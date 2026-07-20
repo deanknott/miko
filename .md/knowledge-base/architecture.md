@@ -36,7 +36,7 @@ Miko is a Vite React SPA (client) talking to Vercel Serverless Functions (`api/*
 │  _auth.js     — password hash/verify, session sign/verify, cookies,   │
 │                 requireAuth guard, email/password validation           │
 │  _crypto.js   — AES-256-GCM encrypt/decrypt (AI provider API key)     │
-│  _email.js    — Resend wrapper (password reset)                       │
+│  _email.js    — Gmail SMTP wrapper via nodemailer (password reset)    │
 │  state.js, ingredients.js, categories.js, recipes.js — data, all      │
 │                 scoped to the authenticated user                       │
 │  settings.js, suggest-ai.js — AI provider settings + suggestions       │
@@ -136,3 +136,4 @@ api/*.js       → Vercel Serverless Functions, auto-detected (no vercel.json)
 - The AI provider API key's encryption key is derived from `SESSION_SECRET` rather than a dedicated secret — a pragmatic reuse, not a dedicated key-management setup.
 - `AISuggest.jsx` has no caching/dedupe — every "Get suggestions" click is a fresh (billable, for hosted providers) call to the user's configured endpoint.
 - No automated tests anywhere in the project; all verification so far has been manual (build + live browser checks via Playwright during development).
+- Password-reset emails send via a personal Gmail account over SMTP (`nodemailer`, `GMAIL_USER`/`GMAIL_APP_PASSWORD`), not a dedicated transactional email provider — chosen because Resend's free tier only delivers to the account owner's own inbox without a verified domain, which the app owner doesn't have. Fine at this app's scale (a handful of users), but ties deliverability to one person's Gmail account (subject to Gmail's ~500/day sending limit and normal personal-account spam heuristics) with no delivery analytics. Revisit if a domain is ever acquired — see `api/_email.js`.
