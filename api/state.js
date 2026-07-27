@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const session = await requireAuth(req, res)
   if (!session) return
 
-  const [ingredientRows, categoryRows, recipeRows, recipeIngredientRows] = await Promise.all([
+  const [ingredientRows, categoryRows, recipeRows, recipeIngredientRows, mealPlanRows] = await Promise.all([
     sql`SELECT name, checked, category_id AS "categoryId" FROM ingredients WHERE user_id = ${session.userId} ORDER BY name`,
     sql`SELECT id, name FROM categories WHERE user_id = ${session.userId} ORDER BY name`,
     sql`SELECT id, name FROM recipes WHERE user_id = ${session.userId} ORDER BY id`,
@@ -18,6 +18,7 @@ export default async function handler(req, res) {
       SELECT recipe_id AS "recipeId", name, essential FROM recipe_ingredients
       WHERE recipe_id IN (SELECT id FROM recipes WHERE user_id = ${session.userId})
     `,
+    sql`SELECT id, day_of_week AS "dayOfWeek", recipe_id AS "recipeId" FROM meal_plan_entries WHERE user_id = ${session.userId} ORDER BY id`,
   ])
 
   const ingsByRecipe = new Map()
@@ -32,5 +33,6 @@ export default async function handler(req, res) {
     ingredients: ingredientRows,
     categories: categoryRows,
     recipes,
+    mealPlan: mealPlanRows,
   })
 }

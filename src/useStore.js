@@ -5,6 +5,7 @@ export function useStore() {
   const [ingredients, setIngredients] = useState([])
   const [recipes, setRecipes] = useState([])
   const [categories, setCategories] = useState([])
+  const [mealPlan, setMealPlan] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -19,6 +20,7 @@ export function useStore() {
         setIngredients(data.ingredients)
         setCategories(data.categories)
         setRecipes(data.recipes)
+        setMealPlan(data.mealPlan)
       })
       .catch(() => { if (!ignore) setError('Failed to load data from the server.') })
       .finally(() => { if (!ignore) setLoading(false) })
@@ -170,6 +172,45 @@ export function useStore() {
     }
   }
 
+  async function addMealPlanEntry(dayOfWeek, recipeId) {
+    try {
+      const created = await api('/api/meal-plan', { method: 'POST', body: JSON.stringify({ dayOfWeek, recipeId }) })
+      setMealPlan(prev => [...prev, created])
+      return created
+    } catch {
+      setError('Failed to add to meal plan.')
+      return null
+    }
+  }
+
+  async function removeMealPlanEntry(id) {
+    const prev = mealPlan
+    setMealPlan(list => list.filter(e => e.id !== id))
+    try {
+      await api(`/api/meal-plan?id=${id}`, { method: 'DELETE' })
+    } catch {
+      setMealPlan(prev)
+      setError('Failed to remove from meal plan.')
+    }
+  }
+
+  function getShoppingList() {
+    const plannedRecipeIds = new Set(mealPlan.map(e => e.recipeId))
+    const plannedRecipes = recipes.filter(r => plannedRecipeIds.has(r.id))
+    const neededByName = new Map()
+    for (const recipe of plannedRecipes) {
+      for (const ing of recipe.ings) {
+        if (!neededByName.has(ing.name)) neededByName.set(ing.name, new Set())
+        neededByName.get(ing.name).add(recipe.name)
+      }
+    }
+    const checkedNames = new Set(ingredients.filter(i => i.checked).map(i => i.name))
+    return [...neededByName.entries()]
+      .filter(([name]) => !checkedNames.has(name))
+      .map(([name, neededFor]) => ({ name, neededFor: [...neededFor].sort() }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }
+
   function getMatch(recipe) {
     const checkedNames = ingredients.filter(i => i.checked).map(i => i.name)
     const ingNames = recipe.ings.map(i => i.name)
@@ -192,6 +233,7 @@ export function useStore() {
     ingredients,
     recipes,
     categories,
+    mealPlan,
     loading,
     error,
     clearError: () => setError(null),
@@ -206,6 +248,9 @@ export function useStore() {
     removeRecipe,
     updateRecipeIngs,
     renameRecipe,
+    addMealPlanEntry,
+    removeMealPlanEntry,
+    getShoppingList,
     getMatch,
     getSortedRecipes,
   }

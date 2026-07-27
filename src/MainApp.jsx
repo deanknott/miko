@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useStore } from './useStore.js'
 import Ingredients from './Ingredients.jsx'
 import Recipes from './Recipes.jsx'
+import MealPlan from './MealPlan.jsx'
+import ShoppingList from './ShoppingList.jsx'
 import Suggest from './Suggest.jsx'
 import AISuggest from './AISuggest.jsx'
 import Settings from './Settings.jsx'
@@ -10,6 +12,8 @@ import styles from './App.module.css'
 const TABS = [
   { id: 'ingredients', label: 'Ingredients' },
   { id: 'recipes', label: 'Recipes' },
+  { id: 'meal-plan', label: 'Meal Plan' },
+  { id: 'shopping-list', label: 'Shopping List' },
   { id: 'suggest', label: "Tonight's pick" },
   { id: 'ai-suggest', label: 'AI Ideas' },
 ]
@@ -100,6 +104,21 @@ export default function MainApp({ user, onLogout }) {
             removeRecipe={store.removeRecipe}
             updateRecipeIngs={store.updateRecipeIngs}
             renameRecipe={store.renameRecipe}
+          />
+        )}
+        {activeTab === 'meal-plan' && (
+          <MealPlan
+            mealPlan={store.mealPlan}
+            recipes={store.recipes}
+            addMealPlanEntry={store.addMealPlanEntry}
+            removeMealPlanEntry={store.removeMealPlanEntry}
+          />
+        )}
+        {activeTab === 'shopping-list' && (
+          <ShoppingList
+            mealPlan={store.mealPlan}
+            shoppingList={store.getShoppingList()}
+            toggleIngredient={store.toggleIngredient}
           />
         )}
         {activeTab === 'suggest' && (

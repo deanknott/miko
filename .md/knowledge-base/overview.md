@@ -2,7 +2,7 @@
 
 ## Goal
 
-A web app that answers "what should I cook tonight?" by matching your current ingredients against your recipes and surfacing the best option. Multi-user: each account has its own ingredients, categories, and recipes.
+A web app that answers "what should I cook tonight?" by matching your current ingredients against your recipes and surfacing the best option. Multi-user: each account has its own ingredients, categories, recipes, and meal plan.
 
 ## Features
 
@@ -11,6 +11,8 @@ A web app that answers "what should I cook tonight?" by matching your current in
 | **Auth**        | Email + password signup/login/logout, session via signed HTTP-only cookie (30-day expiry). "Forgot password" emails a reset link (via Gmail SMTP) that lands on a dedicated reset form via a `?resetToken=` URL param. No email verification, no rate limiting on attempts. |
 | **Ingredients** | Pantry list of ingredient names, each with a checked/unchecked in-stock state, optionally grouped into user-defined categories (add/rename/delete a category, with a confirmation prompt before deleting; deleting one uncategorizes its ingredients rather than deleting them). Drag-and-drop (whole row, 200ms press-and-hold before it activates) to move an ingredient between categories. Categories sort alphabetically; ingredients within each (and "Uncategorized") sort checked-first then alphabetically. Add via text input (Enter or button), remove any ingredient (with a confirmation prompt), toggle in-stock via checkbox. Duplicate names (case-insensitive) rejected. Shows an "N of M in stock" count. |
 | **Recipes**     | Add recipes with a name and a list of ingredients, each optionally flagged "essential". The ingredient field is a custom-built (not native `<datalist>`) autocomplete suggesting names already in your pantry, but free-text entry for a brand-new ingredient still works. Saving a recipe with an ingredient not yet in your pantry auto-adds it there, unchecked — existing ingredients are never touched. View recipes as cards showing match %, a match bar, and tag chips (green = in stock, red = missing, ★ = essential), ranked by match percentage descending. Edit mode lets you rename the recipe itself, rename/add/remove its ingredients (always keeping at least one), and toggle which are essential. Deleting a recipe asks for confirmation first. Recipes missing an essential ingredient sit under a separate "Unmakable" section rather than being deleted or hidden. |
+| **Meal Plan**   | Assign existing recipes to days of the week (Monday–Sunday). This is a repeating weekly template, not tied to a specific calendar date — it doesn't reset or advance on its own. Each day can hold any number of recipes. Recipes are picked from a dropdown of everything already on the Recipes tab (create recipes there first); removing a day's entry doesn't delete the recipe itself. |
+| **Shopping List** | Entirely derived, no storage of its own: the set of ingredients needed by whatever's currently in the Meal Plan that aren't already checked off in your pantry, deduped, each showing which planned recipe(s) need it. Checking an item off here calls the same toggle as the Ingredients tab, so it marks that ingredient in-stock in your pantry too — the item then disappears from the list on its own (derived, not tracked separately). |
 | **Tonight's pick** | Ranks all makable recipes by match percentage; shows the top pick with a reason, a "Find recipe ↗" Google-search link, and "Show another" to skip and re-rank. Shows up to 3 runner-ups. Resets the skip list if you run out of makable recipes. |
 | **AI Ideas**    | "Get suggestions" button sends your checked-off ingredients to whatever OpenAI-compatible chat completions endpoint you've configured in Settings (OpenAI, Ollama, LM Studio, OpenRouter, Groq, etc.) and renders the recommended recipes as cards. Suggestions come from the model's own training knowledge only — there is no live web search (a generic OpenAI-compatible endpoint has no standard way to do that). |
 | **Settings**    | Per-account AI provider config: endpoint URL, model name, API key. The key is write-only (never sent back to the browser after saving, only a "configured" indicator) and encrypted at rest. |
@@ -46,6 +48,7 @@ All data lives in Postgres (Neon), accessed only through the `/api/*` serverless
 | `ingredients`            | Composite primary key `(user_id, name)`, `checked`, optional `category_id` |
 | `recipes`                | `name`, owned by `user_id`                                                  |
 | `recipe_ingredients`     | `(recipe_id, name)`, `essential` — no `user_id` of its own; ownership is transitive via `recipe_id → recipes.user_id` |
+| `meal_plan_entries`      | `user_id`, `day_of_week` (`monday`–`sunday`, CHECK-constrained), `recipe_id` — any number of entries per day; the Shopping List has no table of its own, it's derived from this + `recipes` + `ingredients` at read time |
 
 ## How to Run / Build
 
@@ -59,7 +62,7 @@ npm run dev:vercel                # Vite + the /api serverless functions togethe
 
 `npm run dev` (plain `vite`) still works for quick UI-only iteration, but every tab calls `/api/*`, so nothing loads without `vercel dev` (or a deployed environment) running.
 
-One-time setup scripts (see [file-reference.md](file-reference.md) for details): `db:migrate-auth` + `db:claim-data <email>` (adds accounts to an existing database), `db:migrate-ai-settings` (adds the AI provider settings columns). All are idempotent — safe to re-run.
+One-time setup scripts (see [file-reference.md](file-reference.md) for details): `db:migrate-auth` + `db:claim-data <email>` (adds accounts to an existing database), `db:migrate-ai-settings` (adds the AI provider settings columns), `db:migrate-meal-plan` (creates the `meal_plan_entries` table). All are idempotent — safe to re-run.
 
 ```bash
 npm run build      # production build (dist/)

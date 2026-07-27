@@ -16,13 +16,16 @@ Miko is a Vite React SPA (client) talking to Vercel Serverless Functions (`api/*
 │        ├── auth.loading         → loading state                       │
 │        ├── !auth.user           → <Auth /> (login/signup/forgot)      │
 │        └── else                 → <MainApp user onLogout>             │
-│              ├── useStore()     — ingredients/recipes/categories       │
+│              ├── useStore()     — ingredients/recipes/categories/      │
+│              │                    mealPlan                             │
 │              ├── tab navigation (plain useState, no router)            │
 │              ├── header burger menu (☰) → "Settings" link             │
 │              │     (same activeTab state, not part of the tab bar)    │
 │              └── active tab renders one of:                           │
 │                    ├── Ingredients.jsx  (categories, drag-and-drop)    │
 │                    ├── Recipes.jsx      (custom ingredient autocomplete)│
+│                    ├── MealPlan.jsx     (recipes → days of the week)   │
+│                    ├── ShoppingList.jsx (derived, no fetch of its own) │
 │                    ├── Suggest.jsx      ("Tonight's pick")             │
 │                    ├── AISuggest.jsx    (AI Ideas)                     │
 │                    └── Settings.jsx     (AI provider config — reached  │
@@ -37,8 +40,8 @@ Miko is a Vite React SPA (client) talking to Vercel Serverless Functions (`api/*
 │                 requireAuth guard, email/password validation           │
 │  _crypto.js   — AES-256-GCM encrypt/decrypt (AI provider API key)     │
 │  _email.js    — Gmail SMTP wrapper via nodemailer (password reset)    │
-│  state.js, ingredients.js, categories.js, recipes.js — data, all      │
-│                 scoped to the authenticated user                       │
+│  state.js, ingredients.js, categories.js, recipes.js, meal-plan.js —  │
+│                 data, all scoped to the authenticated user             │
 │  settings.js, suggest-ai.js — AI provider settings + suggestions       │
 │  auth/{signup,login,logout,me,forgot-password,reset-password}.js       │
 └──────────────────────────────────────────────────────────────────────┘
@@ -107,6 +110,14 @@ Any new component that fetches on mount needs this same guard, or it's silently 
 Saving a recipe (`POST`/`PATCH /api/recipes`) also calls `ensurePantryIngredients()` server-side, which `INSERT ... ON CONFLICT (user_id, name) DO NOTHING RETURNING ...` for every ingredient the recipe references — any name not already in the pantry is created there as **unchecked**; existing ones (checked or not) are left untouched. The response's `newIngredients` array is merged into `useStore`'s local `ingredients` state so the Ingredients tab reflects it immediately, no reload needed.
 
 `RecipeCard`'s edit mode (toggled by its "edit" button) covers the recipe's full mutable surface: renaming the recipe itself, renaming/adding/removing its ingredients, and toggling which are essential — all via the same `PATCH /api/recipes` endpoint. `id` is the only required field; `name` and `ings` are both optional and independently applied (a pure rename sends `{id, name}` with no `ings`, so it doesn't touch `recipe_ingredients` at all). Removing an ingredient is blocked client-side once only one remains — a recipe must always have at least one ingredient, matching the creation form's rule.
+
+## Meal Plan & Shopping List
+
+- `meal_plan_entries` is a flat join table (`user_id`, `day_of_week`, `recipe_id`) — `day_of_week` is a `TEXT` CHECK-constrained to the seven lowercase day names, not a date column. There's no notion of "week of," so the plan is a single repeating template that never resets or advances on its own; a day can hold any number of recipes (no uniqueness constraint on `(user_id, day_of_week)`).
+- `api/meal-plan.js` only exposes `POST`/`DELETE` — there's no dedicated `GET`. Entries are fetched as part of the combined `GET /api/state` payload (`mealPlan`) alongside ingredients/categories/recipes, matching the existing one-shot-fetch-on-mount pattern rather than adding a second request.
+- **The Shopping List has no backing table or API route of its own.** `useStore.js`'s `getShoppingList()` is a pure derived function (same category as `getMatch`/`getSortedRecipes`): it looks up every recipe referenced anywhere in `mealPlan`, flattens and dedupes their ingredients, filters out any already `checked` in the pantry, and returns each with the list of planned recipe names that need it. Recomputed on every call — fine at this data scale, no memoization.
+- The Shopping List's checkbox calls the same `toggleIngredient` mutator the Ingredients tab uses — there's no separate "shopping" state. Checking an item marks it checked in the pantry; since the list is derived and recomputes from live state, the item simply stops appearing on next render rather than being tracked as "done" some other way.
+- `MealPlan.jsx`'s day-to-recipe picker is a plain native `<select>`, not `IngredientAutocomplete` — recipe lists are expected to stay short enough that a dropdown is sufficient, unlike the pantry-ingredient autocomplete which needed filtering.
 
 ## AI Ideas & Settings
 

@@ -4,7 +4,7 @@
 
 Miko cuts out the deliberation by matching your current ingredients against your recipes and surfacing the best option.
 
-Data (ingredients, categories, recipes) is stored in a Postgres database (Vercel/Neon) via serverless API routes, scoped per signed-in user — there is no client-only mode anymore.
+Data (ingredients, categories, recipes, meal plan) is stored in a Postgres database (Vercel/Neon) via serverless API routes, scoped per signed-in user — there is no client-only mode anymore.
 
 ## Getting started
 
@@ -49,6 +49,17 @@ npm run db:migrate-ai-settings   # adds ai_endpoint_url/ai_model/ai_api_key_encr
 This feature asks the model to recommend recipes from its own training knowledge — it does not perform a live web
 search (a generic OpenAI-compatible endpoint has no standard way to do that).
 
+### Meal Plan & Shopping List setup
+
+The "Meal Plan" tab assigns existing recipes to days of the week (Monday–Sunday, repeats weekly — not tied to a
+specific date). The "Shopping List" tab is entirely derived from that: it's the set of ingredients needed by
+whatever's currently planned that aren't already checked off in your pantry — no separate storage of its own.
+Checking an item off the shopping list marks it checked in your pantry too. Run once against the live database:
+
+```bash
+npm run db:migrate-meal-plan   # creates the meal_plan_entries table
+```
+
 ## Scripts
 
 | Command | Description |
@@ -61,6 +72,7 @@ search (a generic OpenAI-compatible endpoint has no standard way to do that).
 | `npm run db:migrate-auth` | One-time: create `users`/`password_reset_tokens` tables and add nullable `user_id` columns |
 | `npm run db:claim-data <email>` | One-time: reassign pre-auth ingredients/recipes/categories to the given account and finalize per-user constraints |
 | `npm run db:migrate-ai-settings` | One-time: add AI provider settings columns to `users` (safe to re-run) |
+| `npm run db:migrate-meal-plan` | One-time: create the `meal_plan_entries` table (safe to re-run) |
 
 ## Structure
 
@@ -70,10 +82,11 @@ api/
   _auth.js           # Password hashing, session signing/cookies, requireAuth guard
   _email.js          # Gmail SMTP wrapper (nodemailer) for password-reset emails
   _crypto.js         # AES-256-GCM encrypt/decrypt for the AI provider API key at rest
-  state.js           # GET  /api/state       — full { ingredients, categories, recipes } for the signed-in user
+  state.js           # GET  /api/state       — full { ingredients, categories, recipes, mealPlan } for the signed-in user
   ingredients.js     # POST/PATCH/DELETE     — add, toggle/move, remove (scoped to the signed-in user)
   categories.js      # POST/PATCH/DELETE     — add, rename, delete (uncategorizes ingredients)
   recipes.js         # POST/PATCH/DELETE     — add, update ingredients, remove
+  meal-plan.js       # POST/DELETE           — assign/remove a recipe on a day of the week
   settings.js        # GET/PATCH             — the signed-in user's AI provider settings
   suggest-ai.js      # POST                  — calls the user's configured OpenAI-compatible endpoint
   auth/
@@ -88,6 +101,7 @@ scripts/
   migrate-auth.mjs          # One-time: users/password_reset_tokens tables + nullable user_id columns
   claim-existing-data.mjs   # One-time: assigns pre-auth data to a real account by email
   migrate-ai-settings.mjs   # One-time: adds AI provider settings columns to users
+  migrate-meal-plan.mjs     # One-time: creates the meal_plan_entries table
 src/
   main.jsx          # React entry point
   App.jsx           # Thin auth-gating shell — reset-password link, loading, Auth, or MainApp
@@ -103,6 +117,10 @@ src/
   Ingredients.module.css
   Recipes.jsx       # Add / view recipes with match preview
   Recipes.module.css
+  MealPlan.jsx      # Assign recipes to days of the week (Monday–Sunday, repeats weekly)
+  MealPlan.module.css
+  ShoppingList.jsx  # Derived list of unchecked ingredients needed by the current meal plan
+  ShoppingList.module.css
   Suggest.jsx       # Tonight's pick — ranked by ingredient match
   Suggest.module.css
   AISuggest.jsx     # AI Ideas tab — recipe suggestions from the configured AI provider
