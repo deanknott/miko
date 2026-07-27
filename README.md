@@ -60,6 +60,15 @@ Checking an item off the shopping list marks it checked in your pantry too. Run 
 npm run db:migrate-meal-plan   # creates the meal_plan_entries table
 ```
 
+Meal plan entries are created/removed via `POST`/`DELETE /api/state`, not a separate route — this project is on
+Vercel's Hobby plan, which caps deployments at 12 Serverless Functions (`api/*.js` files, excluding `_*.js`
+helpers), and it's already at that limit. Any future feature needing a new API endpoint should extend an existing
+`api/*.js` file rather than add one; check the current count first with:
+
+```bash
+find api -name "*.js" -not -name "_*" | wc -l
+```
+
 ## Scripts
 
 | Command | Description |
@@ -83,10 +92,11 @@ api/
   _email.js          # Gmail SMTP wrapper (nodemailer) for password-reset emails
   _crypto.js         # AES-256-GCM encrypt/decrypt for the AI provider API key at rest
   state.js           # GET  /api/state       — full { ingredients, categories, recipes, mealPlan } for the signed-in user
+                     # also POST/DELETE      — assign/remove a meal plan entry (kept here, not its own file, to
+                     #                          stay at Vercel's Hobby-plan 12-function cap)
   ingredients.js     # POST/PATCH/DELETE     — add, toggle/move, remove (scoped to the signed-in user)
   categories.js      # POST/PATCH/DELETE     — add, rename, delete (uncategorizes ingredients)
   recipes.js         # POST/PATCH/DELETE     — add, update ingredients, remove
-  meal-plan.js       # POST/DELETE           — assign/remove a recipe on a day of the week
   settings.js        # GET/PATCH             — the signed-in user's AI provider settings
   suggest-ai.js      # POST                  — calls the user's configured OpenAI-compatible endpoint
   auth/

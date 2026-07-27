@@ -174,7 +174,7 @@ export function useStore() {
 
   async function addMealPlanEntry(dayOfWeek, recipeId) {
     try {
-      const created = await api('/api/meal-plan', { method: 'POST', body: JSON.stringify({ dayOfWeek, recipeId }) })
+      const created = await api('/api/state', { method: 'POST', body: JSON.stringify({ dayOfWeek, recipeId }) })
       setMealPlan(prev => [...prev, created])
       return created
     } catch {
@@ -187,7 +187,7 @@ export function useStore() {
     const prev = mealPlan
     setMealPlan(list => list.filter(e => e.id !== id))
     try {
-      await api(`/api/meal-plan?id=${id}`, { method: 'DELETE' })
+      await api(`/api/state?id=${id}`, { method: 'DELETE' })
     } catch {
       setMealPlan(prev)
       setError('Failed to remove from meal plan.')

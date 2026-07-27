@@ -40,8 +40,9 @@ Miko is a Vite React SPA (client) talking to Vercel Serverless Functions (`api/*
 │                 requireAuth guard, email/password validation           │
 │  _crypto.js   — AES-256-GCM encrypt/decrypt (AI provider API key)     │
 │  _email.js    — Gmail SMTP wrapper via nodemailer (password reset)    │
-│  state.js, ingredients.js, categories.js, recipes.js, meal-plan.js —  │
-│                 data, all scoped to the authenticated user             │
+│  state.js, ingredients.js, categories.js, recipes.js — data, all      │
+│                 scoped to the authenticated user (state.js also       │
+│                 handles POST/DELETE for meal plan entries — see below)│
 │  settings.js, suggest-ai.js — AI provider settings + suggestions       │
 │  auth/{signup,login,logout,me,forgot-password,reset-password}.js       │
 └──────────────────────────────────────────────────────────────────────┘
@@ -114,7 +115,7 @@ Saving a recipe (`POST`/`PATCH /api/recipes`) also calls `ensurePantryIngredient
 ## Meal Plan & Shopping List
 
 - `meal_plan_entries` is a flat join table (`user_id`, `day_of_week`, `recipe_id`) — `day_of_week` is a `TEXT` CHECK-constrained to the seven lowercase day names, not a date column. There's no notion of "week of," so the plan is a single repeating template that never resets or advances on its own; a day can hold any number of recipes (no uniqueness constraint on `(user_id, day_of_week)`).
-- `api/meal-plan.js` only exposes `POST`/`DELETE` — there's no dedicated `GET`. Entries are fetched as part of the combined `GET /api/state` payload (`mealPlan`) alongside ingredients/categories/recipes, matching the existing one-shot-fetch-on-mount pattern rather than adding a second request.
+- Meal plan entries are created/removed via `POST`/`DELETE /api/state` (not a dedicated `api/meal-plan.js` file — that existed briefly during development but was folded into `state.js` after it pushed the deployment to 13 Serverless Functions, one over Vercel's Hobby-plan cap of 12; `GET /api/state` was already the natural place to read them, so mutating there too kept the function count at 12 without adding a new route file). Entries are fetched as part of the combined `GET /api/state` payload (`mealPlan`) alongside ingredients/categories/recipes, matching the existing one-shot-fetch-on-mount pattern. **If a future feature needs a new `api/*.js` file, check the current function count first (`find api -name "*.js" -not -name "_*" | wc -l`) — at 12 already, anything new must reuse an existing route rather than add one.**
 - **The Shopping List has no backing table or API route of its own.** `useStore.js`'s `getShoppingList()` is a pure derived function (same category as `getMatch`/`getSortedRecipes`): it looks up every recipe referenced anywhere in `mealPlan`, flattens and dedupes their ingredients, filters out any already `checked` in the pantry, and returns each with the list of planned recipe names that need it. Recomputed on every call — fine at this data scale, no memoization.
 - The Shopping List's checkbox calls the same `toggleIngredient` mutator the Ingredients tab uses — there's no separate "shopping" state. Checking an item marks it checked in the pantry; since the list is derived and recomputes from live state, the item simply stops appearing on next render rather than being tracked as "done" some other way.
 - `MealPlan.jsx`'s day-to-recipe picker is a plain native `<select>`, not `IngredientAutocomplete` — recipe lists are expected to stay short enough that a dropdown is sufficient, unlike the pantry-ingredient autocomplete which needed filtering.
