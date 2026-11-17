@@ -35,6 +35,7 @@ Each recipe's match score is the percentage of its ingredients currently checked
 | Auth             | `bcryptjs` (password hashing), `jose` (session JWT), `cookie` (Set-Cookie/parse) |
 | Password reset email | `nodemailer` over Gmail SMTP (`GMAIL_USER`/`GMAIL_APP_PASSWORD`)       |
 | State            | `useStore` (ingredients/recipes/categories) + `useAuth` (session) hooks, fetch-based, no external state library |
+| Testing          | Vitest (+ React Testing Library and jsdom for `useStore`), run in CI by GitHub Actions |
 
 ## Data Storage
 
@@ -69,4 +70,8 @@ npm run build      # production build (dist/)
 npm run preview    # preview the production build
 ```
 
-No test runner, linter, or type checker is configured.
+```bash
+npm test           # Vitest suite in tests/ — mocks the database, email and fetch, so no env vars needed
+```
+
+GitHub Actions (`.github/workflows/test.yml`) runs `npm test` on every push and pull request. No linter or type checker is configured.

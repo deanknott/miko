@@ -77,11 +77,21 @@ find api -name "*.js" -not -name "_*" | wc -l
 | `npm run dev` | Start Vite only, no `/api` backend |
 | `npm run build` | Production build |
 | `npm run preview` | Preview production build |
+| `npm test` | Run the Vitest test suite once (also runs in GitHub Actions on every push) |
+| `npm run test:watch` | Run Vitest in watch mode |
 | `npm run db:init` | Create tables and seed default data (safe to re-run — skips seeding if tables already have rows) |
 | `npm run db:migrate-auth` | One-time: create `users`/`password_reset_tokens` tables and add nullable `user_id` columns |
 | `npm run db:claim-data <email>` | One-time: reassign pre-auth ingredients/recipes/categories to the given account and finalize per-user constraints |
 | `npm run db:migrate-ai-settings` | One-time: add AI provider settings columns to `users` (safe to re-run) |
 | `npm run db:migrate-meal-plan` | One-time: create the `meal_plan_entries` table (safe to re-run) |
+
+## Tests
+
+```bash
+npm test
+```
+
+Vitest unit and API tests live in `tests/` (not `api/`, where Vercel would deploy every file as a Serverless Function and count it against the 12-function cap). The database, email sender and `fetch` are mocked, so the tests need no `.env.local`, database or network. `.github/workflows/test.yml` runs them on every push and pull request.
 
 ## Structure
 

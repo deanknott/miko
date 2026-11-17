@@ -4,9 +4,10 @@
 
 | File               | Purpose                                                                 |
 | ------------------ | ------------------------------------------------------------------------ |
-| `package.json`     | Scripts (`dev`, `dev:vercel`, `build`, `preview`, `db:*`), deps (React 18, Vite 5, `@dnd-kit/core`, `@neondatabase/serverless`, `bcryptjs`, `jose`, `cookie`, `nodemailer`) |
+| `package.json`     | Scripts (`dev`, `dev:vercel`, `build`, `preview`, `test`, `test:watch`, `db:*`), deps (React 18, Vite 5, `@dnd-kit/core`, `@neondatabase/serverless`, `bcryptjs`, `jose`, `cookie`, `nodemailer`), test devDeps (`vitest`, `@testing-library/react`, `@testing-library/dom`, `jsdom`) |
 | `package-lock.json`| Locked dependency tree                                                    |
-| `vite.config.js`   | Vite config — registers `@vitejs/plugin-react`, no other plugins/aliases  |
+| `vite.config.js`   | Vite config — registers `@vitejs/plugin-react`, no other plugins/aliases; `test` block configures Vitest (node environment, `tests/setup.js`, `tests/**/*.test.js`) |
+| `.github/workflows/test.yml` | GitHub Actions — `npm ci` + `npm test` on every push and pull request |
 | `README.md`        | Setup instructions (incl. Vercel/Postgres/auth/AI-settings one-time steps), scripts table, structure overview |
 | `CLAUDE.md`        | Agent working instructions — knowledge base load order, coding conventions, doc-maintenance rules |
 | `.claude/settings.local.json` | Local Claude Code permission settings for this project        |
@@ -31,6 +32,20 @@
 | `api/auth/me.js`               | `GET` — `requireAuth` then re-fetch `{ id, email }` fresh; used by `useAuth` on mount to restore a session |
 | `api/auth/forgot-password.js`  | `POST` — always returns the same generic message; if the email exists, generates + stores a 1-hour reset token and emails a link via `_email.js` |
 | `api/auth/reset-password.js`   | `POST` — validates the token (hash + unused + unexpired), updates the password, signs a new session (auto-login) |
+
+## Tests (`tests/`) — Vitest; kept out of `api/` so Vercel doesn't deploy them as functions
+
+| File                               | Role                                                                 |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| `tests/setup.js`                   | Sets a test `SESSION_SECRET` before `_auth.js`/`_crypto.js` load      |
+| `tests/helpers.js`                 | `mockReq`/`mockRes` (Vercel req/res stand-ins), `authCookie(userId)`, `queryText`/`queryValues` for inspecting calls to the mocked `sql` tag |
+| `tests/auth.test.js`               | `_auth.js` — bcrypt hashing, JWT sign/verify (tampered/expired/wrong-secret), cookie flags, `requireAuth`, reset tokens, email/password validation |
+| `tests/crypto.test.js`             | `_crypto.js` — AES-256-GCM round trip, fresh IV, tamper detection     |
+| `tests/useStore.test.js`           | `useStore()` via `renderHook` (jsdom, `apiClient` mocked) — `getMatch`, `getSortedRecipes`, `getShoppingList`, optimistic toggle + rollback |
+| `tests/api/auth-handlers.test.js`  | login/signup/me/forgot-password/reset-password handlers with `_db.js` and `_email.js` mocked |
+| `tests/api/protected-routes.test.js` | Every data route returns 401 without, or with a forged, session and never queries the database |
+| `tests/api/settings.test.js`       | API key is never returned by GET and is encrypted before storage on PATCH |
+| `tests/api/suggest-ai.test.js`     | `fetch` stubbed — config/ingredient checks, network and provider errors, bad JSON, code-fence parsing, hallucinated-ingredient filtering |
 
 ## Scripts (`scripts/`) — one-time / idempotent DB setup, run via `node --env-file=.env.local scripts/*.mjs`
 
